@@ -146,6 +146,27 @@ final class VendingMachine
     }
 
     /**
+     * Maintenance operation (SERVICE): replaces product stock and the change bank
+     * with the commanded values. Does not touch the current session balance.
+     *
+     * @param array<string, int> $productStock selector value (e.g. WATER) => stock count
+     */
+    public function service(array $productStock, CoinInventory $changeBank): void
+    {
+        foreach ($productStock as $selectorValue => $stock) {
+            $selector = ProductSelector::from($selectorValue);
+            $product = $this->product($selector);
+            $this->products[$selector->value] = new Product(
+                $product->selector,
+                $product->price,
+                $stock,
+            );
+        }
+
+        $this->changeBank = $changeBank;
+    }
+
+    /**
      * @throws UnknownProductException when the machine does not stock the selector
      */
     public function product(ProductSelector $selector): Product
