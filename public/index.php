@@ -13,11 +13,11 @@ use App\Infrastructure\Http\Controllers\ServiceController;
 use App\Infrastructure\Http\Controllers\StateController;
 use App\Infrastructure\Http\ExceptionToHttpMapper;
 use App\Infrastructure\Http\Router;
-use App\Infrastructure\Persistence\InMemoryVendingMachineRepository;
+use App\Infrastructure\Persistence\FileVendingMachineRepository;
 
 require dirname(__DIR__) . '/vendor/autoload.php';
 
-$repository = new InMemoryVendingMachineRepository();
+$repository = new FileVendingMachineRepository();
 $exceptionMapper = new ExceptionToHttpMapper();
 
 $coinController = new CoinController(
@@ -50,5 +50,19 @@ $router->get('/state', $stateController(...));
 
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+
+$staticMap = [
+    '/'           => ['text/html',              __DIR__ . '/index.html'],
+    '/index.html' => ['text/html',              __DIR__ . '/index.html'],
+    '/style.css'  => ['text/css',               __DIR__ . '/style.css'],
+    '/app.js'     => ['application/javascript', __DIR__ . '/app.js'],
+];
+
+if (isset($staticMap[$path])) {
+    [$mime, $file] = $staticMap[$path];
+    header("Content-Type: $mime; charset=utf-8");
+    readfile($file);
+    exit;
+}
 
 $router->dispatch($method, $path)->emit();

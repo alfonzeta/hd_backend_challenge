@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vending Machine</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+
+<div class="scene">
+  <div class="machine" id="machine">
+
+    <!-- Header bar -->
+    <header class="machine__header">
+      <div class="machine__brand">
+        <span class="machine__brand-dot"></span>
+        <span class="machine__brand-name">VM–01</span>
+        <span class="machine__brand-dot"></span>
+      </div>
+      <div class="machine__display" id="display">
+        <div class="display__label">INSERTED</div>
+        <div class="display__value" id="display-balance">€ 0.00</div>
+        <div class="display__message" id="display-message"></div>
+      </div>
+    </header>
+
+    <!-- Main body: glass + coin panel -->
+    <div class="machine__body">
+
+      <!-- Glass panel -->
+      <section class="machine__glass" aria-label="Product selection">
+        <div class="glass__reflection"></div>
+        <div class="glass__inner">
+
+          <!-- Product rows -->
+          <div class="shelf" data-product="WATER">
+            <div class="shelf__units" id="shelf-WATER" aria-label="Water stock"></div>
+            <div class="shelf__floor"></div>
+          </div>
+          <div class="shelf" data-product="JUICE">
+            <div class="shelf__units" id="shelf-JUICE" aria-label="Juice stock"></div>
+            <div class="shelf__floor"></div>
+          </div>
+          <div class="shelf" data-product="SODA">
+            <div class="shelf__units" id="shelf-SODA" aria-label="Soda stock"></div>
+            <div class="shelf__floor"></div>
+          </div>
+
+        </div>
+
+        <!-- Product selector buttons -->
+        <div class="glass__selectors">
+          <button class="selector-btn" id="btn-WATER" data-product="WATER" data-stock="0" disabled>
+            <span class="selector-btn__key">A1</span>
+            <span class="selector-btn__name">WATER</span>
+            <span class="selector-btn__price" id="price-WATER">—</span>
+          </button>
+          <button class="selector-btn" id="btn-JUICE" data-product="JUICE" data-stock="0" disabled>
+            <span class="selector-btn__key">A2</span>
+            <span class="selector-btn__name">JUICE</span>
+            <span class="selector-btn__price" id="price-JUICE">—</span>
+          </button>
+          <button class="selector-btn" id="btn-SODA" data-product="SODA" data-stock="0" disabled>
+            <span class="selector-btn__key">A3</span>
+            <span class="selector-btn__name">SODA</span>
+            <span class="selector-btn__price" id="price-SODA">—</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Coin panel -->
+      <aside class="machine__coin-panel" aria-label="Coin insertion">
+        <div class="coin-panel__slot-area">
+          <div class="coin-slot" id="coin-slot">
+            <div class="coin-slot__label">INSERT COIN</div>
+            <div class="coin-slot__opening">
+              <div class="coin-slot__slit"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="coin-panel__buttons">
+          <button class="coin-btn" data-coin="5">
+            <span class="coin-btn__value">5¢</span>
+          </button>
+          <button class="coin-btn" data-coin="10">
+            <span class="coin-btn__value">10¢</span>
+          </button>
+          <button class="coin-btn" data-coin="25">
+            <span class="coin-btn__value">25¢</span>
+          </button>
+          <button class="coin-btn" data-coin="100">
+            <span class="coin-btn__value">€1</span>
+          </button>
+        </div>
+
+        <div class="coin-panel__divider"></div>
+
+        <button class="return-btn" id="btn-return">
+          <span class="return-btn__icon">↩</span>
+          <span class="return-btn__label">RETURN<br>COINS</span>
+        </button>
+
+      </aside>
+
+    </div><!-- /.machine__body -->
+
+    <!-- Dispensing tray -->
+    <div class="machine__tray" id="tray">
+      <div class="tray__opening"></div>
+      <div class="tray__contents" id="tray-contents">
+        <span class="tray__empty">— empty —</span>
+      </div>
+    </div>
+
+    <!-- Technician toggle (discreet key) -->
+    <div class="machine__footer">
+      <button class="tech-key" id="tech-key" aria-label="Technician access">
+        <span class="tech-key__icon">⚙</span>
+        <span class="tech-key__label">TECHNICIAN</span>
+      </button>
+    </div>
+
+  </div><!-- /.machine -->
+
+  <!-- Technician slide-in panel (outside machine flow) -->
+  <div class="tech-panel" id="tech-panel" aria-hidden="true">
+    <div class="tech-panel__inner">
+      <h2 class="tech-panel__title">Service Mode</h2>
+
+      <section class="tech-panel__section">
+        <h3 class="tech-panel__section-title">Restock Products</h3>
+        <div class="tech-panel__grid">
+          <label class="tech-label">
+            <span>Water</span>
+            <input class="tech-input" type="number" min="0" max="20" id="svc-WATER" value="5" />
+          </label>
+          <label class="tech-label">
+            <span>Juice</span>
+            <input class="tech-input" type="number" min="0" max="20" id="svc-JUICE" value="5" />
+          </label>
+          <label class="tech-label">
+            <span>Soda</span>
+            <input class="tech-input" type="number" min="0" max="20" id="svc-SODA" value="5" />
+          </label>
+        </div>
+      </section>
+
+      <section class="tech-panel__section">
+        <h3 class="tech-panel__section-title">Restock Change</h3>
+        <div class="tech-panel__grid">
+          <label class="tech-label">
+            <span>5¢</span>
+            <input class="tech-input" type="number" min="0" max="50" id="svc-coin-5" value="10" />
+          </label>
+          <label class="tech-label">
+            <span>10¢</span>
+            <input class="tech-input" type="number" min="0" max="50" id="svc-coin-10" value="10" />
+          </label>
+          <label class="tech-label">
+            <span>25¢</span>
+            <input class="tech-input" type="number" min="0" max="50" id="svc-coin-25" value="10" />
+          </label>
+          <label class="tech-label">
+            <span>€1</span>
+            <input class="tech-input" type="number" min="0" max="50" id="svc-coin-100" value="10" />
+          </label>
+        </div>
+      </section>
+
+      <button class="tech-panel__apply" id="tech-apply">APPLY SERVICE</button>
+      <button class="tech-panel__close" id="tech-close" aria-label="Close panel">✕</button>
+    </div>
+  </div>
+
+  <!-- Coin fall animation layer (appended by JS) -->
+  <div class="coin-animation-layer" id="coin-animation-layer" aria-hidden="true"></div>
+
+</div><!-- /.scene -->
+
+<script type="module" src="/app.js"></script>
+</body>
+</html>

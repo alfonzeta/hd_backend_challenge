@@ -1,0 +1,1140 @@
+/* =========================================================
+   CSS custom properties
+   ========================================================= */
+:root {
+  --steel:         #1a2035;
+  --steel-mid:     #232f48;
+  --steel-light:   #2e3d5c;
+  --steel-edge:    #3a4f70;
+  --steel-bright:  #4a6080;
+
+  --glass-bg:      rgba(160, 210, 255, 0.04);
+  --glass-border:  rgba(160, 210, 255, 0.15);
+  --glass-shine:   rgba(255, 255, 255, 0.06);
+
+  --led:           #00e5b0;
+  --led-dim:       rgba(0, 229, 176, 0.3);
+  --led-glow:      rgba(0, 229, 176, 0.15);
+  --led-amber:     #f5a623;
+  --led-amber-dim: rgba(245, 166, 35, 0.3);
+
+  --accent:        #ff4d6d;
+  --accent-glow:   rgba(255, 77, 109, 0.25);
+
+  --product-water: #29a6d4;
+  --product-juice: #f08c2a;
+  --product-soda:  #d42970;
+
+  --coin-gold:     #d4a030;
+  --coin-silver:   #a0aaba;
+
+  --tray-bg:       #111825;
+  --tray-border:   #0a1020;
+
+  --font-mono:     'SF Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+  --font-sans:     system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --shadow-machine: 0 40px 120px rgba(0,0,0,0.8), 0 10px 40px rgba(0,0,0,0.6);
+  --shadow-inset:   inset 0 2px 8px rgba(0,0,0,0.5), inset 0 -1px 3px rgba(255,255,255,0.03);
+  --shadow-glass:   inset 0 0 40px rgba(0,0,0,0.3);
+
+  --radius-machine: 16px;
+  --radius-panel:   10px;
+  --radius-button:  8px;
+  --radius-unit:    6px;
+}
+
+/* =========================================================
+   Reset & base
+   ========================================================= */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: radial-gradient(ellipse at 40% 30%, #0d1b3e 0%, #050d1a 60%, #020710 100%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  overflow-x: hidden;
+}
+
+/* =========================================================
+   Scene wrapper
+   ========================================================= */
+.scene {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* =========================================================
+   Machine shell
+   ========================================================= */
+.machine {
+  position: relative;
+  width: 560px;
+  background: linear-gradient(175deg, var(--steel-mid) 0%, var(--steel) 50%, #131a29 100%);
+  border-radius: var(--radius-machine);
+  border: 1.5px solid var(--steel-edge);
+  box-shadow: var(--shadow-machine),
+              inset 0 1px 0 rgba(255,255,255,0.07),
+              inset 0 -1px 0 rgba(0,0,0,0.5);
+  overflow: hidden;
+  padding: 0 0 16px;
+  /* physical left-right edge highlight */
+  outline: 4px solid var(--steel);
+  outline-offset: -2px;
+}
+
+/* Subtle vertical ribbing at the edges */
+.machine::before,
+.machine::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 14px;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0,0,0,0.18) 0px,
+    rgba(0,0,0,0.18) 2px,
+    rgba(255,255,255,0.02) 2px,
+    rgba(255,255,255,0.02) 4px
+  );
+  z-index: 10;
+  pointer-events: none;
+}
+.machine::before { left: 0; border-radius: var(--radius-machine) 0 0 var(--radius-machine); }
+.machine::after  { right: 0; border-radius: 0 var(--radius-machine) var(--radius-machine) 0; }
+
+/* Error shake animation applied to .machine */
+.machine--shake {
+  animation: machine-shake 0.45s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+/* Service flash */
+.machine--service-flash {
+  animation: service-flash 0.5s ease-out both;
+}
+
+/* =========================================================
+   Header / Brand bar
+   ========================================================= */
+.machine__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px 12px;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.25), transparent);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  gap: 12px;
+}
+
+.machine__brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.machine__brand-name {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  color: var(--steel-bright);
+  text-transform: uppercase;
+}
+
+.machine__brand-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--steel-edge);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
+}
+
+/* LED Display */
+.machine__display {
+  flex: 1;
+  background: #080f1a;
+  border: 1px solid rgba(0, 229, 176, 0.2);
+  border-radius: 8px;
+  padding: 8px 14px;
+  box-shadow: var(--shadow-inset), 0 0 20px var(--led-glow);
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  max-width: 280px;
+}
+
+.display__label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  color: var(--led-dim);
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+
+.display__value {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--led);
+  letter-spacing: 0.05em;
+  text-shadow: 0 0 10px var(--led), 0 0 20px var(--led-glow);
+  flex: 1;
+  text-align: right;
+  transition: color 0.2s;
+}
+
+.display__message {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--led-amber);
+  letter-spacing: 0.06em;
+  max-width: 120px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: right;
+  min-height: 14px;
+}
+
+.display__value--error {
+  color: var(--accent) !important;
+  text-shadow: 0 0 10px var(--accent), 0 0 20px var(--accent-glow) !important;
+  animation: flash-error 0.4s ease-out;
+}
+
+.display__value--success {
+  animation: flash-success 0.4s ease-out;
+}
+
+/* =========================================================
+   Machine body: glass + coin panel side by side
+   ========================================================= */
+.machine__body {
+  display: flex;
+  gap: 0;
+  padding: 16px 18px;
+  align-items: stretch;
+}
+
+/* =========================================================
+   Glass panel
+   ========================================================= */
+.machine__glass {
+  flex: 1;
+  position: relative;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-panel);
+  overflow: hidden;
+  box-shadow: var(--shadow-glass);
+}
+
+/* Shine overlay on glass */
+.glass__reflection {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    var(--glass-shine) 0%,
+    transparent 40%,
+    transparent 60%,
+    rgba(255,255,255,0.02) 100%
+  );
+  pointer-events: none;
+  z-index: 5;
+  border-radius: inherit;
+}
+
+.glass__inner {
+  padding: 12px 12px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* =========================================================
+   Shelves
+   ========================================================= */
+.shelf {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.shelf__units {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 5px;
+  min-height: 62px;
+  padding: 4px 6px 0;
+}
+
+.shelf__floor {
+  height: 3px;
+  background: linear-gradient(to right, transparent, var(--steel-edge), var(--steel-edge), transparent);
+  border-radius: 2px;
+  margin: 0 4px;
+  opacity: 0.7;
+}
+
+/* =========================================================
+   Product units (CSS shapes for each product)
+   ========================================================= */
+.product-unit {
+  position: relative;
+  width: 28px;
+  flex-shrink: 0;
+  border-radius: var(--radius-unit) var(--radius-unit) 4px 4px;
+  box-shadow: inset -3px 0 6px rgba(0,0,0,0.3), 0 2px 4px rgba(0,0,0,0.4);
+  cursor: default;
+  transform-origin: bottom center;
+  transition: opacity 0.2s;
+}
+
+.product-unit--WATER {
+  height: 56px;
+  background: linear-gradient(
+    170deg,
+    #5ed0f0 0%,
+    var(--product-water) 40%,
+    #1a7ca0 80%,
+    #0e4f66 100%
+  );
+  border-top: 2px solid #a0e8ff;
+}
+
+.product-unit--WATER::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  left: 4px;
+  width: 6px;
+  height: 18px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.25);
+  transform: skewX(-8deg);
+}
+
+.product-unit--JUICE {
+  height: 52px;
+  background: linear-gradient(
+    170deg,
+    #ffd080 0%,
+    var(--product-juice) 40%,
+    #b05a10 80%,
+    #6e3208 100%
+  );
+  border-top: 2px solid #ffe0a0;
+  border-radius: 4px 4px 8px 8px;
+}
+
+.product-unit--JUICE::before {
+  content: '';
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  width: 5px;
+  height: 14px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.2);
+  transform: skewX(-5deg);
+}
+
+.product-unit--SODA {
+  height: 58px;
+  background: linear-gradient(
+    170deg,
+    #ff80a8 0%,
+    var(--product-soda) 40%,
+    #8a1545 80%,
+    #550c2a 100%
+  );
+  border-top: 2px solid #ffb0cc;
+  border-radius: 5px 5px 3px 3px;
+}
+
+.product-unit--SODA::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 4px;
+  width: 5px;
+  height: 20px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.18);
+  transform: skewX(-6deg);
+}
+
+/* Ghost unit for empty slots */
+.product-unit--ghost {
+  opacity: 0.12;
+  background: var(--steel-edge) !important;
+  border-top-color: var(--steel-bright) !important;
+}
+.product-unit--ghost::before {
+  display: none;
+}
+
+/* Falling product animation */
+.product-unit--falling {
+  animation: product-fall 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  z-index: 100;
+  position: relative;
+}
+
+/* =========================================================
+   Product selector buttons
+   ========================================================= */
+.glass__selectors {
+  display: flex;
+  gap: 8px;
+  padding: 10px 8px;
+  background: rgba(0,0,0,0.2);
+  border-top: 1px solid rgba(255,255,255,0.04);
+}
+
+.selector-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 6px;
+  background: var(--steel-mid);
+  border: 1px solid var(--steel-edge);
+  border-radius: var(--radius-button);
+  color: var(--led);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
+  font-family: var(--font-mono);
+}
+
+.selector-btn:hover:not(:disabled) {
+  background: var(--steel-light);
+  border-color: var(--led-dim);
+  box-shadow: 0 2px 12px rgba(0, 229, 176, 0.15), inset 0 1px 0 rgba(255,255,255,0.07);
+}
+
+.selector-btn:active:not(:disabled) {
+  transform: scale(0.96);
+  box-shadow: none;
+}
+
+.selector-btn:disabled,
+.selector-btn[data-stock="0"] {
+  opacity: 0.38;
+  cursor: not-allowed;
+  border-color: var(--steel);
+}
+
+.selector-btn__key {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: var(--led-amber);
+  opacity: 0.8;
+}
+
+.selector-btn__name {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--led);
+}
+
+.selector-btn__price {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--led-amber);
+  text-shadow: 0 0 8px rgba(245, 166, 35, 0.4);
+}
+
+/* =========================================================
+   Coin panel
+   ========================================================= */
+.machine__coin-panel {
+  width: 130px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 10px;
+  margin-left: 14px;
+}
+
+.coin-panel__slot-area {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.coin-slot {
+  width: 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.coin-slot__label {
+  font-family: var(--font-mono);
+  font-size: 7px;
+  letter-spacing: 0.12em;
+  color: var(--led-dim);
+  text-transform: uppercase;
+}
+
+.coin-slot__opening {
+  width: 60px;
+  height: 20px;
+  background: #080f1a;
+  border-radius: 10px;
+  border: 1.5px solid var(--steel-edge);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.8), 0 1px 0 rgba(255,255,255,0.04);
+  position: relative;
+  overflow: hidden;
+}
+
+.coin-slot__slit {
+  width: 32px;
+  height: 3px;
+  background: #020710;
+  border-radius: 2px;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.9);
+}
+
+/* Coin buttons */
+.coin-panel__buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+}
+
+.coin-btn {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 2px solid;
+  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.2), transparent 60%),
+              radial-gradient(circle at center, var(--coin-gold), #8a6010);
+  border-color: #b8880f;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.12s, box-shadow 0.12s;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,255,0.2);
+  font-family: var(--font-mono);
+}
+
+/* Silver style for small coins */
+.coin-btn[data-coin="5"],
+.coin-btn[data-coin="10"],
+.coin-btn[data-coin="25"] {
+  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.3), transparent 60%),
+              radial-gradient(circle at center, #d0d8e0, #7a8898);
+  border-color: #8a9ab0;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,255,0.3);
+}
+
+.coin-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,255,0.25);
+}
+
+.coin-btn:active:not(:disabled) {
+  transform: translateY(1px) scale(0.93);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
+
+.coin-btn__value {
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(0,0,0,0.75);
+  text-shadow: 0 1px 0 rgba(255,255,255,0.3);
+  letter-spacing: 0.02em;
+  pointer-events: none;
+}
+
+.coin-panel__divider {
+  width: 80%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--steel-edge), transparent);
+}
+
+/* Return button */
+.return-btn {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 6px;
+  background: var(--steel-mid);
+  border: 1px solid var(--steel-edge);
+  border-radius: var(--radius-button);
+  color: var(--led-amber);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  font-family: var(--font-mono);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+
+.return-btn:hover:not(:disabled) {
+  background: var(--steel-light);
+  border-color: var(--led-amber-dim);
+}
+
+.return-btn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.return-btn__icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.return-btn__label {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-align: center;
+  line-height: 1.3;
+}
+
+/* Change bank */
+.change-bank {
+  width: 100%;
+  background: rgba(0,0,0,0.2);
+  border: 1px solid var(--steel-edge);
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+
+.change-bank__label {
+  font-family: var(--font-mono);
+  font-size: 7px;
+  letter-spacing: 0.15em;
+  color: var(--led-dim);
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+
+.change-bank__coins {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.change-bank__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.change-bank__denom {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--steel-bright);
+}
+
+.change-bank__count {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--led-amber);
+  text-shadow: 0 0 6px rgba(245,166,35,0.3);
+  min-width: 18px;
+  text-align: right;
+}
+
+.change-bank__count--low {
+  color: var(--accent);
+  text-shadow: 0 0 6px rgba(255, 77, 109, 0.4);
+}
+
+/* =========================================================
+   Dispensing tray
+   ========================================================= */
+.machine__tray {
+  margin: 0 18px 6px;
+  background: var(--tray-bg);
+  border: 2px solid var(--tray-border);
+  border-radius: 0 0 10px 10px;
+  border-top: none;
+  min-height: 64px;
+  position: relative;
+  box-shadow: inset 0 4px 12px rgba(0,0,0,0.6);
+  overflow: hidden;
+}
+
+.tray__opening {
+  height: 6px;
+  background: linear-gradient(to bottom, #020810, transparent);
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+
+.tray__contents {
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 52px;
+}
+
+.tray__empty {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--steel-edge);
+  letter-spacing: 0.1em;
+  opacity: 0.5;
+}
+
+/* Dispensed product in tray */
+.tray-product {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  animation: tray-item-appear 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.tray-product--WATER {
+  background: rgba(41, 166, 212, 0.2);
+  border: 1px solid rgba(41, 166, 212, 0.4);
+  color: #5ed0f0;
+}
+
+.tray-product--JUICE {
+  background: rgba(240, 140, 42, 0.2);
+  border: 1px solid rgba(240, 140, 42, 0.4);
+  color: #ffd080;
+}
+
+.tray-product--SODA {
+  background: rgba(212, 41, 112, 0.2);
+  border: 1px solid rgba(212, 41, 112, 0.4);
+  color: #ff80a8;
+}
+
+/* Change coins in tray */
+.tray-coin {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 700;
+  opacity: 0;
+  animation: coin-appear 0.25s ease-out forwards;
+}
+
+.tray-coin--silver {
+  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.3), transparent 60%),
+              radial-gradient(circle at center, #c8d4e0, #6a7888);
+  border: 1.5px solid #8a9ab0;
+  color: rgba(0,0,0,0.6);
+}
+
+.tray-coin--gold {
+  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.2), transparent 60%),
+              radial-gradient(circle at center, var(--coin-gold), #7a5010);
+  border: 1.5px solid #a87010;
+  color: rgba(0,0,0,0.65);
+}
+
+/* =========================================================
+   Machine footer (technician key)
+   ========================================================= */
+.machine__footer {
+  display: flex;
+  justify-content: center;
+  padding: 4px 0 2px;
+}
+
+.tech-key {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 20px;
+  cursor: pointer;
+  opacity: 0.35;
+  transition: opacity 0.2s, border-color 0.2s;
+  color: var(--steel-bright);
+  font-family: var(--font-mono);
+}
+
+.tech-key:hover {
+  opacity: 0.8;
+  border-color: var(--steel-bright);
+}
+
+.tech-key__icon {
+  font-size: 11px;
+  transition: transform 0.3s;
+}
+
+.tech-key:hover .tech-key__icon {
+  transform: rotate(60deg);
+}
+
+.tech-key__label {
+  font-size: 8px;
+  letter-spacing: 0.18em;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* =========================================================
+   Technician slide-in panel
+   ========================================================= */
+.tech-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: 300px;
+  background: linear-gradient(175deg, #1a2540, #0e1628);
+  border-left: 1px solid var(--steel-edge);
+  box-shadow: -20px 0 60px rgba(0,0,0,0.7);
+  transform: translateX(100%);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 200;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--steel-edge) transparent;
+}
+
+.tech-panel[aria-hidden="false"] {
+  transform: translateX(0);
+}
+
+.tech-panel__inner {
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-height: 100%;
+}
+
+.tech-panel__title {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0.2em;
+  color: var(--led);
+  text-transform: uppercase;
+  text-shadow: 0 0 12px var(--led-glow);
+  border-bottom: 1px solid var(--steel-edge);
+  padding-bottom: 12px;
+}
+
+.tech-panel__section-title {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  color: var(--led-amber);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.tech-panel__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.tech-label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  cursor: default;
+}
+
+.tech-label span {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--steel-bright);
+  letter-spacing: 0.08em;
+}
+
+.tech-input {
+  width: 100%;
+  padding: 8px 10px;
+  background: #080f1a;
+  border: 1px solid var(--steel-edge);
+  border-radius: 6px;
+  color: var(--led);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  -moz-appearance: textfield;
+}
+
+.tech-input::-webkit-outer-spin-button,
+.tech-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+}
+
+.tech-input:focus {
+  border-color: var(--led-dim);
+  box-shadow: 0 0 0 2px var(--led-glow);
+}
+
+.tech-panel__apply {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, rgba(0,229,176,0.15), rgba(0,229,176,0.08));
+  border: 1px solid var(--led-dim);
+  border-radius: var(--radius-button);
+  color: var(--led);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+  box-shadow: 0 0 20px var(--led-glow);
+  text-transform: uppercase;
+}
+
+.tech-panel__apply:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(0,229,176,0.25), rgba(0,229,176,0.15));
+  box-shadow: 0 0 30px var(--led-glow), inset 0 0 10px var(--led-glow);
+}
+
+.tech-panel__apply:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.tech-panel__apply:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.tech-panel__close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: 1px solid var(--steel-edge);
+  border-radius: 50%;
+  color: var(--steel-bright);
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s, color 0.15s;
+  line-height: 1;
+}
+
+.tech-panel__close:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* =========================================================
+   Coin animation layer
+   ========================================================= */
+.coin-animation-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 300;
+}
+
+/* Animated coin that flies into the slot */
+.flying-coin {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 7px;
+  font-weight: 700;
+  pointer-events: none;
+  animation: coin-fly 0.35s cubic-bezier(0.4, 0, 0.8, 0.6) forwards;
+}
+
+.flying-coin--silver {
+  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.3), transparent),
+              radial-gradient(circle at center, #c8d4e0, #6a7888);
+  border: 1.5px solid #8a9ab0;
+  color: rgba(0,0,0,0.65);
+}
+
+.flying-coin--gold {
+  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.2), transparent),
+              radial-gradient(circle at center, var(--coin-gold), #7a5010);
+  border: 1.5px solid #a87010;
+  color: rgba(0,0,0,0.65);
+}
+
+/* =========================================================
+   Keyframe animations
+   ========================================================= */
+
+/* Machine shake on error */
+@keyframes machine-shake {
+  0%   { transform: translateX(0); }
+  15%  { transform: translateX(-8px); }
+  30%  { transform: translateX(7px); }
+  45%  { transform: translateX(-6px); }
+  60%  { transform: translateX(5px); }
+  75%  { transform: translateX(-3px); }
+  90%  { transform: translateX(2px); }
+  100% { transform: translateX(0); }
+}
+
+/* Green flash on service */
+@keyframes service-flash {
+  0%   { box-shadow: var(--shadow-machine); }
+  30%  { box-shadow: var(--shadow-machine), 0 0 40px rgba(0,229,176,0.5); }
+  100% { box-shadow: var(--shadow-machine); }
+}
+
+/* Display error flash */
+@keyframes flash-error {
+  0%, 100% { opacity: 1; }
+  25%       { opacity: 0.3; }
+  50%       { opacity: 1; }
+  75%       { opacity: 0.5; }
+}
+
+/* Display success pulse */
+@keyframes flash-success {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* Product falls from shelf to tray */
+@keyframes product-fall {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+  30%  { transform: translateY(20px) rotate(-5deg); opacity: 1; }
+  60%  { transform: translateY(60px) rotate(10deg); opacity: 1; }
+  85%  { transform: translateY(100px) rotate(15deg); opacity: 0.7; }
+  100% { transform: translateY(140px) rotate(18deg); opacity: 0; }
+}
+
+/* Tray item appears with a bounce */
+@keyframes tray-item-appear {
+  0%   { opacity: 0; transform: translateY(-12px) scale(0.85); }
+  60%  { opacity: 1; transform: translateY(2px) scale(1.04); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Tray pulses when item lands */
+@keyframes tray-pulse {
+  0%   { box-shadow: inset 0 4px 12px rgba(0,0,0,0.6); }
+  40%  { box-shadow: inset 0 4px 12px rgba(0,0,0,0.6), 0 0 20px rgba(0,229,176,0.2); }
+  100% { box-shadow: inset 0 4px 12px rgba(0,0,0,0.6); }
+}
+
+.machine__tray--pulse {
+  animation: tray-pulse 0.4s ease-out;
+}
+
+/* Change coin appears in tray */
+@keyframes coin-appear {
+  0%   { opacity: 0; transform: scale(0.5) translateY(-8px); }
+  70%  { opacity: 1; transform: scale(1.1) translateY(0); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Flying coin from button to slot */
+@keyframes coin-fly {
+  0%   { opacity: 1; transform: scale(1); }
+  70%  { opacity: 0.8; transform: scale(0.7); }
+  100% { opacity: 0; transform: scale(0.3); }
+}
+
+/* =========================================================
+   Disabled / in-flight state
+   ========================================================= */
+.machine--busy .coin-btn,
+.machine--busy .selector-btn,
+.machine--busy .return-btn {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+/* =========================================================
+   Scrollbar styling
+   ========================================================= */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--steel-edge); border-radius: 2px; }
+
+/* =========================================================
+   Responsive: scale down on small screens
+   ========================================================= */
+@media (max-width: 640px) {
+  .machine {
+    width: 100%;
+    max-width: 480px;
+  }
+
+  .machine__body {
+    flex-direction: column;
+  }
+
+  .machine__coin-panel {
+    width: 100%;
+    margin-left: 0;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    padding: 10px 0;
+  }
+
+  .coin-panel__slot-area { display: none; }
+  .change-bank { width: 100%; }
+
+  .coin-panel__buttons {
+    grid-template-columns: repeat(4, 1fr);
+    flex: 1;
+  }
+}
