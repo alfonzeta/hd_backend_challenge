@@ -151,6 +151,53 @@ final class VendingMachineTest extends TestCase
         self::assertTrue($machine->insertedBalance()->equals(Money::fromCents(0)));
     }
 
+    public function testServiceSetsProductStock(): void
+    {
+        $machine = $this->machine();
+        $machine->insert(Coin::TenCents);
+        $machine->product(ProductSelector::Water)->dispenseOne();
+
+        $machine->service(
+            [
+                ProductSelector::Water->value => 12,
+                ProductSelector::Soda->value => 3,
+            ],
+            $machine->changeBank(),
+        );
+
+        self::assertSame(12, $machine->product(ProductSelector::Water)->stock());
+        self::assertSame(3, $machine->product(ProductSelector::Soda)->stock());
+    }
+
+    public function testServiceSetsChangeBank(): void
+    {
+        $machine = $this->machine();
+        $newBank = CoinInventory::fromCounts([
+            Coin::OneEuro->value => 2,
+            Coin::FiveCents->value => 20,
+        ]);
+
+        $machine->service([ProductSelector::Water->value => 5], $newBank);
+
+        self::assertSame(2, $machine->changeBank()->count(Coin::OneEuro));
+        self::assertSame(20, $machine->changeBank()->count(Coin::FiveCents));
+        self::assertSame(0, $machine->changeBank()->count(Coin::TwentyFiveCents));
+    }
+
+    public function testServiceDoesNotResetInsertedBalance(): void
+    {
+        $machine = $this->machine();
+        $machine->insert(Coin::TwentyFiveCents);
+        $machine->insert(Coin::TenCents);
+
+        $machine->service(
+            [ProductSelector::Water->value => 7],
+            CoinInventory::fromCounts([Coin::TenCents->value => 5]),
+        );
+
+        self::assertTrue($machine->insertedBalance()->equals(Money::fromCents(35)));
+    }
+
     private function machine(?CoinInventory $changeBank = null): VendingMachine
     {
         return VendingMachine::create(
