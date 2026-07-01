@@ -426,6 +426,8 @@ body {
   transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.1s;
   box-shadow: 0 2px 6px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
   font-family: var(--font-mono);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 .selector-btn:hover:not(:disabled) {
@@ -547,6 +549,8 @@ body {
   transition: transform 0.12s, box-shadow 0.12s;
   box-shadow: 0 3px 8px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,255,0.2);
   font-family: var(--font-mono);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 /* Silver style for small coins */
@@ -600,6 +604,8 @@ body {
   transition: background 0.15s, border-color 0.15s, transform 0.1s;
   font-family: var(--font-mono);
   box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 .return-btn:hover:not(:disabled) {
@@ -1109,32 +1115,435 @@ body {
 ::-webkit-scrollbar-thumb { background: var(--steel-edge); border-radius: 2px; }
 
 /* =========================================================
-   Responsive: scale down on small screens
+   Responsive — tablet
    ========================================================= */
-@media (max-width: 640px) {
+@media (max-width: 768px) {
+  body {
+    padding: 16px;
+  }
+
   .machine {
     width: 100%;
-    max-width: 480px;
+    max-width: 560px;
+    box-shadow:
+      0 24px 64px rgba(0, 0, 0, 0.7),
+      0 8px 24px rgba(0, 0, 0, 0.5),
+      inset 0 1px 0 rgba(255, 255, 255, 0.07),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* =========================================================
+   Responsive — mobile
+   ========================================================= */
+@media (max-width: 640px) {
+  body {
+    align-items: flex-start;
+    padding:
+      max(12px, env(safe-area-inset-top))
+      max(12px, env(safe-area-inset-right))
+      max(12px, env(safe-area-inset-bottom))
+      max(12px, env(safe-area-inset-left));
+    min-height: 100dvh;
   }
 
+  .scene {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .machine {
+    width: 100%;
+    max-width: none;
+    border-radius: 12px;
+    outline-width: 3px;
+    padding-bottom: 12px;
+  }
+
+  .machine::before,
+  .machine::after {
+    width: 8px;
+  }
+
+  /* Header: stack brand above display */
+  .machine__header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px 14px 10px;
+  }
+
+  .machine__brand {
+    justify-content: center;
+  }
+
+  .machine__display {
+    max-width: none;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    gap: 6px 10px;
+  }
+
+  .display__value {
+    font-size: 20px;
+  }
+
+  .display__message {
+    flex-basis: 100%;
+    max-width: none;
+    text-align: center;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    font-size: 9px;
+    min-height: auto;
+  }
+
+  /* Body: glass on top, coin controls below */
   .machine__body {
     flex-direction: column;
+    padding: 12px 14px;
+    gap: 0;
   }
 
+  .machine__glass {
+    border-radius: 8px;
+  }
+
+  .glass__inner {
+    padding: 10px 10px 4px;
+    gap: 5px;
+  }
+
+  .shelf__units {
+    min-height: 50px;
+    gap: 4px;
+    padding: 2px 4px 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .shelf__units::-webkit-scrollbar {
+    display: none;
+  }
+
+  .product-unit {
+    width: 24px;
+  }
+
+  .product-unit--WATER { height: 48px; }
+  .product-unit--JUICE { height: 44px; }
+  .product-unit--SODA  { height: 50px; }
+
+  .glass__selectors {
+    gap: 6px;
+    padding: 8px 6px;
+  }
+
+  .selector-btn {
+    min-height: 52px;
+    padding: 8px 4px;
+  }
+
+  .selector-btn__name {
+    font-size: 9px;
+    letter-spacing: 0.12em;
+  }
+
+  /* Coin panel: full-width row below products */
   .machine__coin-panel {
     width: 100%;
     margin-left: 0;
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    padding: 10px 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 14px 0 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    margin-top: 12px;
   }
 
-  .coin-panel__slot-area { display: none; }
-  .change-bank { width: 100%; }
+  .coin-panel__slot-area {
+    display: none;
+  }
 
   .coin-panel__buttons {
-    grid-template-columns: repeat(4, 1fr);
-    flex: 1;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    width: min(100%, 240px);
+    margin: 0 auto;
+    justify-items: center;
+  }
+
+  .coin-btn {
+    width: 100%;
+    max-width: 80px;
+    aspect-ratio: 1;
+    height: auto;
+    min-height: 0;
+  }
+
+  .coin-btn__value {
+    font-size: 11px;
+  }
+
+  .coin-panel__divider {
+    width: 100%;
+  }
+
+  .return-btn {
+    flex-direction: row;
+    justify-content: center;
+    gap: 10px;
+    min-height: 48px;
+    padding: 12px 16px;
+  }
+
+  .return-btn__label {
+    font-size: 9px;
+    text-align: left;
+  }
+
+  .return-btn__label br {
+    display: none;
+  }
+
+  .change-bank {
+    width: 100%;
+  }
+
+  /* Tray */
+  .machine__tray {
+    margin: 0 14px 4px;
+    min-height: 56px;
+    border-radius: 0 0 8px 8px;
+  }
+
+  .tray__contents {
+    padding: 8px 10px;
+    min-height: 44px;
+    gap: 6px;
+    justify-content: center;
+  }
+
+  .tray-product {
+    font-size: 10px;
+    padding: 5px 10px;
+  }
+
+  .tray-coin {
+    width: 26px;
+    height: 26px;
+    font-size: 7px;
+  }
+
+  /* Footer */
+  .machine__footer {
+    padding: 6px 0 4px;
+  }
+
+  .tech-key {
+    min-height: 44px;
+    padding: 8px 16px;
+    opacity: 0.5;
+  }
+
+  /* Technician panel: full-width drawer */
+  .tech-panel {
+    width: 100%;
+    max-width: 100%;
+    border-left: none;
+    border-top: 1px solid var(--steel-edge);
+    top: auto;
+    bottom: 0;
+    height: auto;
+    max-height: 92dvh;
+    transform: translateY(100%);
+    box-shadow: 0 -16px 48px rgba(0, 0, 0, 0.7);
+    border-radius: 16px 16px 0 0;
+  }
+
+  .tech-panel[aria-hidden="false"] {
+    transform: translateY(0);
+  }
+
+  .tech-panel__inner {
+    padding:
+      24px
+      max(20px, env(safe-area-inset-right))
+      max(24px, env(safe-area-inset-bottom))
+      max(20px, env(safe-area-inset-left));
+  }
+
+  .tech-panel__apply {
+    min-height: 48px;
+  }
+
+  .tech-input {
+    min-height: 44px;
+    font-size: 16px; /* prevents iOS zoom on focus */
+  }
+
+  /* Shorter product-fall on stacked layout */
+  @keyframes product-fall {
+    0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+    30%  { transform: translateY(16px) rotate(-5deg); opacity: 1; }
+    60%  { transform: translateY(48px) rotate(10deg); opacity: 1; }
+    85%  { transform: translateY(80px) rotate(15deg); opacity: 0.7; }
+    100% { transform: translateY(110px) rotate(18deg); opacity: 0; }
+  }
+}
+
+/* =========================================================
+   Responsive — small phones
+   ========================================================= */
+@media (max-width: 380px) {
+  body {
+    padding:
+      max(8px, env(safe-area-inset-top))
+      max(8px, env(safe-area-inset-right))
+      max(8px, env(safe-area-inset-bottom))
+      max(8px, env(safe-area-inset-left));
+  }
+
+  .machine__header {
+    padding: 10px 12px 8px;
+  }
+
+  .machine__body {
+    padding: 10px 12px;
+  }
+
+  .machine__brand-name {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+  }
+
+  .display__value {
+    font-size: 18px;
+  }
+
+  .product-unit {
+    width: 20px;
+  }
+
+  .product-unit--WATER { height: 42px; }
+  .product-unit--JUICE { height: 38px; }
+  .product-unit--SODA  { height: 44px; }
+
+  .shelf__units {
+    min-height: 44px;
+    gap: 3px;
+  }
+
+  .selector-btn {
+    min-height: 48px;
+    padding: 6px 2px;
+  }
+
+  .selector-btn__key {
+    font-size: 8px;
+  }
+
+  .selector-btn__price {
+    font-size: 10px;
+  }
+
+  .coin-btn {
+    max-width: 72px;
+  }
+
+  .coin-btn__value {
+    font-size: 10px;
+  }
+
+  .machine__tray {
+    margin: 0 12px 4px;
+  }
+
+  .tech-panel__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================================================
+   Responsive — landscape phones
+   ========================================================= */
+@media (max-width: 896px) and (orientation: landscape) and (max-height: 500px) {
+  body {
+    align-items: center;
+    padding: 8px 16px;
+  }
+
+  .machine__header {
+    flex-direction: row;
+    padding: 8px 14px;
+  }
+
+  .machine__brand {
+    justify-content: flex-start;
+  }
+
+  .machine__display {
+    flex-wrap: nowrap;
+  }
+
+  .display__message {
+    flex-basis: auto;
+    max-width: 100px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: right;
+  }
+
+  .machine__body {
+    flex-direction: row;
+    padding: 10px 14px;
+    gap: 12px;
+  }
+
+  .machine__coin-panel {
+    width: 130px;
+    margin-left: 0;
+    margin-top: 0;
+    padding: 0;
+    border-top: none;
+    flex-shrink: 0;
+  }
+
+  .coin-panel__buttons {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .coin-btn {
+    min-height: 0;
+  }
+
+  .return-btn {
+    flex-direction: column;
+    min-height: 0;
+    padding: 8px 6px;
+  }
+
+  .return-btn__label br {
+    display: inline;
+  }
+
+  .tech-panel {
+    top: 0;
+    bottom: auto;
+    height: 100%;
+    max-height: none;
+    border-radius: 0;
+    transform: translateX(100%);
+    border-top: none;
+    border-left: 1px solid var(--steel-edge);
+  }
+
+  .tech-panel[aria-hidden="false"] {
+    transform: translateX(0);
   }
 }
