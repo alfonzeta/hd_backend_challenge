@@ -18,4 +18,4 @@ cs-fix:
 check: cs stan test
 
 serve:
-	php -S localhost:8080 -t public
+	php -S localhost:8080 -t public public/index.php
