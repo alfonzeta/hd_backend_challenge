@@ -4,127 +4,173 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Vending Machine</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%23c8262e'/%3E%3Crect x='3' y='3' width='7' height='10' rx='1' fill='%23241a20'/%3E%3Crect x='11' y='3' width='2.5' height='4' rx='0.7' fill='%2353fb7c'/%3E%3C/svg%3E" />
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
 
 <div class="scene">
-  <div class="machine" id="machine">
 
-    <!-- Header bar -->
-    <header class="machine__header">
-      <div class="machine__brand">
-        <span class="machine__brand-dot"></span>
-        <span class="machine__brand-name">VM–01</span>
-        <span class="machine__brand-dot"></span>
-      </div>
-      <div class="machine__display" id="display">
-        <div class="display__label">INSERTED</div>
-        <div class="display__value" id="display-balance">€ 0.00</div>
-        <div class="display__message" id="display-message"></div>
-      </div>
-    </header>
+  <!-- Scaled stage: the machine is designed at a fixed size and scaled to fit -->
+  <div class="stage-wrap" id="stage-wrap">
+    <div class="stage" id="stage">
 
-    <!-- Main body: glass + coin panel -->
-    <div class="machine__body">
+      <div class="machine" id="machine">
 
-      <!-- Glass panel -->
-      <section class="machine__glass" aria-label="Product selection">
-        <div class="glass__reflection"></div>
-        <div class="glass__inner">
-
-          <!-- Product rows -->
-          <div class="shelf" data-product="WATER">
-            <div class="shelf__units" id="shelf-WATER" aria-label="Water stock"></div>
-            <div class="shelf__floor"></div>
+        <!-- Backlit marquee -->
+        <header class="marquee" id="marquee">
+          <div class="marquee__panel">
+            <span class="marquee__brand">VENDOMAT</span>
+            <span class="marquee__tag">ICE&nbsp;COLD&nbsp;·&nbsp;24/7</span>
           </div>
-          <div class="shelf" data-product="JUICE">
-            <div class="shelf__units" id="shelf-JUICE" aria-label="Juice stock"></div>
-            <div class="shelf__floor"></div>
-          </div>
-          <div class="shelf" data-product="SODA">
-            <div class="shelf__units" id="shelf-SODA" aria-label="Soda stock"></div>
-            <div class="shelf__floor"></div>
-          </div>
+        </header>
 
-        </div>
+        <div class="machine__body">
 
-        <!-- Product selector buttons -->
-        <div class="glass__selectors">
-          <button class="selector-btn" id="btn-WATER" data-product="WATER" data-stock="0" disabled>
-            <span class="selector-btn__key">A1</span>
-            <span class="selector-btn__name">WATER</span>
-            <span class="selector-btn__price" id="price-WATER">—</span>
-          </button>
-          <button class="selector-btn" id="btn-JUICE" data-product="JUICE" data-stock="0" disabled>
-            <span class="selector-btn__key">A2</span>
-            <span class="selector-btn__name">JUICE</span>
-            <span class="selector-btn__price" id="price-JUICE">—</span>
-          </button>
-          <button class="selector-btn" id="btn-SODA" data-product="SODA" data-stock="0" disabled>
-            <span class="selector-btn__key">A3</span>
-            <span class="selector-btn__name">SODA</span>
-            <span class="selector-btn__price" id="price-SODA">—</span>
-          </button>
-        </div>
-      </section>
+          <!-- Glass window with coil slots -->
+          <section class="window" aria-label="Products">
+            <div class="window__glass" id="window-glass">
 
-      <!-- Coin panel -->
-      <aside class="machine__coin-panel" aria-label="Coin insertion">
-        <div class="coin-panel__slot-area">
-          <div class="coin-slot" id="coin-slot">
-            <div class="coin-slot__label">INSERT COIN</div>
-            <div class="coin-slot__opening">
-              <div class="coin-slot__slit"></div>
+              <div class="slot" id="slot-WATER">
+                <div class="slot__lane">
+                  <div class="slot__products" id="products-WATER"></div>
+                  <div class="slot__coil" id="coil-WATER" aria-hidden="true"></div>
+                </div>
+                <div class="slot__shelf"></div>
+                <div class="slot__tag">
+                  <span class="slot__code">A1</span>
+                  <span class="slot__name">WATER</span>
+                  <span class="slot__price" id="price-WATER">—</span>
+                  <span class="slot__soldout" id="soldout-WATER" hidden>SOLD OUT</span>
+                </div>
+              </div>
+
+              <div class="slot" id="slot-JUICE">
+                <div class="slot__lane">
+                  <div class="slot__products" id="products-JUICE"></div>
+                  <div class="slot__coil" id="coil-JUICE" aria-hidden="true"></div>
+                </div>
+                <div class="slot__shelf"></div>
+                <div class="slot__tag">
+                  <span class="slot__code">A2</span>
+                  <span class="slot__name">JUICE</span>
+                  <span class="slot__price" id="price-JUICE">—</span>
+                  <span class="slot__soldout" id="soldout-JUICE" hidden>SOLD OUT</span>
+                </div>
+              </div>
+
+              <div class="slot" id="slot-SODA">
+                <div class="slot__lane">
+                  <div class="slot__products" id="products-SODA"></div>
+                  <div class="slot__coil" id="coil-SODA" aria-hidden="true"></div>
+                </div>
+                <div class="slot__shelf"></div>
+                <div class="slot__tag">
+                  <span class="slot__code">A3</span>
+                  <span class="slot__name">SODA</span>
+                  <span class="slot__price" id="price-SODA">—</span>
+                  <span class="slot__soldout" id="soldout-SODA" hidden>SOLD OUT</span>
+                </div>
+              </div>
+
+              <!-- Dark drop area products fall through -->
+              <div class="window__drop" id="window-drop"></div>
+              <div class="window__glare" aria-hidden="true"></div>
             </div>
+          </section>
+
+          <!-- Control panel -->
+          <aside class="panel" aria-label="Controls">
+
+            <div class="led" id="led">
+              <div class="led__row">
+                <span class="led__label">CREDIT</span>
+                <span class="led__credit" id="led-credit">0.00</span>
+              </div>
+              <div class="led__divider"></div>
+              <div class="led__row led__row--msg">
+                <span class="led__message" id="led-message" aria-live="polite">INSERT COIN</span>
+              </div>
+            </div>
+
+            <div class="lamp" id="lamp-change" data-on="false">
+              <i class="lamp__dot" aria-hidden="true"></i>
+              <span class="lamp__text">USE EXACT CHANGE</span>
+            </div>
+
+            <div class="keypad" role="group" aria-label="Product selection">
+              <button class="keypad__btn" id="key-WATER" data-product="WATER" disabled>
+                <span class="keypad__code">A1</span>
+                <i class="keypad__led" aria-hidden="true"></i>
+              </button>
+              <button class="keypad__btn" id="key-JUICE" data-product="JUICE" disabled>
+                <span class="keypad__code">A2</span>
+                <i class="keypad__led" aria-hidden="true"></i>
+              </button>
+              <button class="keypad__btn" id="key-SODA" data-product="SODA" disabled>
+                <span class="keypad__code">A3</span>
+                <i class="keypad__led" aria-hidden="true"></i>
+              </button>
+            </div>
+
+            <div class="coin-entry">
+              <div class="coin-entry__plate">
+                <div class="coin-entry__slot" id="coin-slot">
+                  <i class="coin-entry__slit" aria-hidden="true"></i>
+                </div>
+                <button class="coin-entry__return" id="btn-return" aria-label="Return inserted coins">
+                  <i class="coin-entry__lever" aria-hidden="true"></i>
+                </button>
+              </div>
+              <span class="coin-entry__label">COINS · PUSH LEVER TO RETURN</span>
+            </div>
+
+            <button class="service-lock" id="tech-key" aria-label="Open service panel">
+              <i class="service-lock__keyhole" aria-hidden="true"></i>
+              <span class="service-lock__label">SERVICE</span>
+            </button>
+
+          </aside>
+        </div><!-- /.machine__body -->
+
+        <!-- Delivery bin + coin return cup -->
+        <div class="machine__bottom">
+          <div class="bin" id="bin">
+            <button class="bin__flap" id="bin-flap" aria-label="Collect product">
+              <span class="bin__flap-text">PUSH</span>
+            </button>
+            <div class="bin__cavity" id="bin-cavity" aria-live="polite"></div>
           </div>
-        </div>
 
-        <div class="coin-panel__buttons">
-          <button class="coin-btn" data-coin="5">
-            <span class="coin-btn__value">5¢</span>
-          </button>
-          <button class="coin-btn" data-coin="10">
-            <span class="coin-btn__value">10¢</span>
-          </button>
-          <button class="coin-btn" data-coin="25">
-            <span class="coin-btn__value">25¢</span>
-          </button>
-          <button class="coin-btn" data-coin="100">
-            <span class="coin-btn__value">€1</span>
+          <button class="cup" id="cup" aria-label="Collect returned coins">
+            <span class="cup__label">COIN RETURN</span>
+            <div class="cup__cavity" id="cup-cavity" aria-live="polite"></div>
           </button>
         </div>
 
-        <div class="coin-panel__divider"></div>
+        <div class="machine__base" aria-hidden="true">
+          <i class="machine__foot"></i>
+          <i class="machine__foot"></i>
+        </div>
 
-        <button class="return-btn" id="btn-return">
-          <span class="return-btn__icon">↩</span>
-          <span class="return-btn__label">RETURN<br> COINS</span>
-        </button>
+      </div><!-- /.machine -->
 
-      </aside>
+    </div><!-- /.stage -->
+  </div><!-- /.stage-wrap -->
 
-    </div><!-- /.machine__body -->
-
-    <!-- Dispensing tray -->
-    <div class="machine__tray" id="tray">
-      <div class="tray__opening"></div>
-      <div class="tray__contents" id="tray-contents">
-        <span class="tray__empty">— empty —</span>
-      </div>
+  <!-- Coin pocket dock -->
+  <footer class="pocket" aria-label="Your coins">
+    <span class="pocket__title">YOUR POCKET</span>
+    <div class="pocket__coins">
+      <button class="pcoin pcoin--silver" data-coin="5"><span class="pcoin__face">5¢</span></button>
+      <button class="pcoin pcoin--silver" data-coin="10"><span class="pcoin__face">10¢</span></button>
+      <button class="pcoin pcoin--silver" data-coin="25"><span class="pcoin__face">25¢</span></button>
+      <button class="pcoin pcoin--gold" data-coin="100"><span class="pcoin__face">€1</span></button>
     </div>
+    <button class="pocket__mute" id="btn-mute" aria-label="Toggle sound" data-muted="false">♪</button>
+  </footer>
 
-    <!-- Technician toggle (discreet key) -->
-    <div class="machine__footer">
-      <button class="tech-key" id="tech-key" aria-label="Technician access">
-        <span class="tech-key__icon">⚙</span>
-        <span class="tech-key__label">TECHNICIAN</span>
-      </button>
-    </div>
-
-  </div><!-- /.machine -->
-
-  <!-- Technician slide-in panel (outside machine flow) -->
+  <!-- Service drawer -->
   <div class="tech-panel" id="tech-panel" aria-hidden="true">
     <div class="tech-panel__inner">
       <h2 class="tech-panel__title">Service Mode</h2>
@@ -174,8 +220,8 @@
     </div>
   </div>
 
-  <!-- Coin fall animation layer (appended by JS) -->
-  <div class="coin-animation-layer" id="coin-animation-layer" aria-hidden="true"></div>
+  <!-- Effects layer (flying coins, sparks) -->
+  <div class="fx-layer" id="fx-layer" aria-hidden="true"></div>
 
 </div><!-- /.scene -->
 

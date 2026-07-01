@@ -1,51 +1,67 @@
+/* ===========================================================================
+   Vending machine UI
+   ---------------------------------------------------------------------------
+   The machine is designed on a fixed-size "stage" (like a physical device
+   blueprint) and scaled to fit the viewport with a transform — this keeps
+   every proportion pixel-perfect at any screen size without media-query
+   soup for the cabinet itself.
+   =========================================================================== */
+
 /* =========================================================
-   CSS custom properties
+   Design tokens
    ========================================================= */
 :root {
-  --steel:         #1a2035;
-  --steel-mid:     #232f48;
-  --steel-light:   #2e3d5c;
-  --steel-edge:    #3a4f70;
-  --steel-bright:  #4a6080;
+  /* Cabinet metals */
+  --cab-red-1:      #c8262e;
+  --cab-red-2:      #9e1b22;
+  --cab-red-3:      #6d1116;
+  --cab-dark:       #1c1216;
+  --cab-edge:       #e6555c;
+  --steel-1:        #d7dde4;
+  --steel-2:        #9aa5b1;
+  --steel-3:        #5c6672;
 
-  --glass-bg:      rgba(160, 210, 255, 0.04);
-  --glass-border:  rgba(160, 210, 255, 0.15);
-  --glass-shine:   rgba(255, 255, 255, 0.06);
+  /* Glass + interior */
+  --glass-tint:     rgba(140, 190, 255, 0.05);
+  --interior-1:     #241a20;
+  --interior-2:     #171015;
 
-  --led:           #00e5b0;
-  --led-dim:       rgba(0, 229, 176, 0.3);
-  --led-glow:      rgba(0, 229, 176, 0.15);
-  --led-amber:     #f5a623;
-  --led-amber-dim: rgba(245, 166, 35, 0.3);
+  /* LED display */
+  --led-bg:         #0a1408;
+  --led-green:      #53fb7c;
+  --led-green-dim:  rgba(83, 251, 124, 0.35);
+  --led-amber:      #ffbe3d;
+  --led-red:        #ff5d5d;
 
-  --accent:        #ff4d6d;
-  --accent-glow:   rgba(255, 77, 109, 0.25);
+  /* Products */
+  --water-1:        #7fd8f7;
+  --water-2:        #2596c9;
+  --water-3:        #10608c;
+  --juice-1:        #ffb648;
+  --juice-2:        #f07f1a;
+  --juice-3:        #a34d05;
+  --soda-1:         #ff5d8a;
+  --soda-2:         #d61f56;
+  --soda-3:         #7e0c30;
 
-  --product-water: #29a6d4;
-  --product-juice: #f08c2a;
-  --product-soda:  #d42970;
+  /* Coins */
+  --coin-gold-1:    #ffd977;
+  --coin-gold-2:    #d4a030;
+  --coin-gold-3:    #8a6210;
+  --coin-silver-1:  #eef2f7;
+  --coin-silver-2:  #aab6c4;
+  --coin-silver-3:  #667180;
 
-  --coin-gold:     #d4a030;
-  --coin-silver:   #a0aaba;
+  --font-mono:      'Cascadia Code', 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  --font-sans:      system-ui, -apple-system, 'Segoe UI', sans-serif;
 
-  --tray-bg:       #111825;
-  --tray-border:   #0a1020;
-
-  --font-mono:     'SF Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
-  --font-sans:     system-ui, -apple-system, 'Segoe UI', sans-serif;
-
-  --shadow-machine: 0 40px 120px rgba(0,0,0,0.8), 0 10px 40px rgba(0,0,0,0.6);
-  --shadow-inset:   inset 0 2px 8px rgba(0,0,0,0.5), inset 0 -1px 3px rgba(255,255,255,0.03);
-  --shadow-glass:   inset 0 0 40px rgba(0,0,0,0.3);
-
-  --radius-machine: 16px;
-  --radius-panel:   10px;
-  --radius-button:  8px;
-  --radius-unit:    6px;
+  /* Fixed stage design size (scaled to fit) */
+  --stage-w: 680px;
+  --stage-h: 880px;
 }
 
 /* =========================================================
-   Reset & base
+   Reset & scene
    ========================================================= */
 *, *::before, *::after {
   box-sizing: border-box;
@@ -53,1497 +69,1388 @@
   padding: 0;
 }
 
-html, body {
-  height: 100%;
-}
+html, body { height: 100%; }
 
 body {
   font-family: var(--font-sans);
-  background: radial-gradient(ellipse at 40% 30%, #0d1b3e 0%, #050d1a 60%, #020710 100%);
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  overflow-x: hidden;
+  background:
+    radial-gradient(ellipse 90% 60% at 50% -10%, #33254a 0%, transparent 60%),
+    radial-gradient(ellipse 120% 80% at 50% 110%, #101622 0%, transparent 55%),
+    linear-gradient(180deg, #171225 0%, #0c0a16 55%, #060510 100%);
+  overflow: hidden;
 }
 
-/* =========================================================
-   Scene wrapper
-   ========================================================= */
+/* Faint brick texture on the back wall */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    repeating-linear-gradient(0deg, transparent 0 46px, rgba(255,255,255,0.022) 46px 48px),
+    repeating-linear-gradient(90deg, transparent 0 110px, rgba(255,255,255,0.016) 110px 112px);
+  pointer-events: none;
+}
+
 .scene {
   position: relative;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* =========================================================
+   Stage scaling
+   ========================================================= */
+.stage-wrap {
+  flex: 1;
+  width: 100%;
   display: flex;
   align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.stage {
+  width: var(--stage-w);
+  height: var(--stage-h);
+  flex-shrink: 0;
+  transform-origin: center center;
+  display: flex;
+  align-items: flex-end;
   justify-content: center;
 }
 
 /* =========================================================
-   Machine shell
+   Cabinet
    ========================================================= */
 .machine {
   position: relative;
-  width: 560px;
-  background: linear-gradient(175deg, var(--steel-mid) 0%, var(--steel) 50%, #131a29 100%);
-  border-radius: var(--radius-machine);
-  border: 1.5px solid var(--steel-edge);
-  box-shadow: var(--shadow-machine),
-              inset 0 1px 0 rgba(255,255,255,0.07),
-              inset 0 -1px 0 rgba(0,0,0,0.5);
-  overflow: hidden;
-  padding: 0 0 16px;
-  /* physical left-right edge highlight */
-  outline: 4px solid var(--steel);
-  outline-offset: -2px;
+  width: 620px;
+  border-radius: 22px 22px 10px 10px;
+  background:
+    linear-gradient(90deg,
+      var(--cab-red-3) 0%, var(--cab-red-2) 4%, var(--cab-red-1) 10%,
+      var(--cab-red-1) 88%, var(--cab-red-2) 95%, var(--cab-red-3) 100%);
+  box-shadow:
+    0 60px 90px -20px rgba(0, 0, 0, 0.85),
+    0 25px 45px -12px rgba(0, 0, 0, 0.7),
+    inset 0 2px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -3px 0 rgba(0, 0, 0, 0.45);
+  padding: 18px 22px 0;
+  margin-bottom: 16px;
 }
 
-/* Subtle vertical ribbing at the edges */
-.machine::before,
-.machine::after {
+/* Curved sheen down the cabinet face */
+.machine::before {
   content: '';
   position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 14px;
-  background: repeating-linear-gradient(
-    to bottom,
-    rgba(0,0,0,0.18) 0px,
-    rgba(0,0,0,0.18) 2px,
-    rgba(255,255,255,0.02) 2px,
-    rgba(255,255,255,0.02) 4px
-  );
-  z-index: 10;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(105deg,
+    rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.04) 18%,
+    transparent 40%, transparent 72%, rgba(0,0,0,0.18) 100%);
+  pointer-events: none;
+  z-index: 4;
+}
+
+.machine--shake { animation: machine-shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+.machine--service-flash { animation: service-flash 0.7s ease-out both; }
+
+/* =========================================================
+   Marquee (backlit header)
+   ========================================================= */
+.marquee {
+  padding-bottom: 14px;
+}
+
+.marquee__panel {
+  position: relative;
+  height: 74px;
+  border-radius: 12px;
+  background:
+    linear-gradient(180deg, #fff6e8 0%, #ffe9c4 45%, #f7cf8e 100%);
+  border: 3px solid var(--cab-red-3);
+  box-shadow:
+    inset 0 0 26px rgba(255, 170, 60, 0.55),
+    inset 0 -6px 14px rgba(200, 90, 20, 0.35),
+    0 0 34px rgba(255, 190, 90, 0.28);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  overflow: hidden;
+  animation: marquee-hum 5s ease-in-out infinite;
+}
+
+/* Fluorescent tube flicker band */
+.marquee__panel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg,
+    transparent 0%, rgba(255,255,255,0.55) 12%, transparent 26%);
+  transform: translateX(-120%);
+  animation: marquee-sweep 7s ease-in-out infinite;
   pointer-events: none;
 }
-.machine::before { left: 0; border-radius: var(--radius-machine) 0 0 var(--radius-machine); }
-.machine::after  { right: 0; border-radius: 0 var(--radius-machine) var(--radius-machine) 0; }
 
-/* Error shake animation applied to .machine */
-.machine--shake {
-  animation: machine-shake 0.45s cubic-bezier(.36,.07,.19,.97) both;
-}
-
-/* Service flash */
-.machine--service-flash {
-  animation: service-flash 0.5s ease-out both;
-}
-
-/* =========================================================
-   Header / Brand bar
-   ========================================================= */
-.machine__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 24px 12px;
-  background: linear-gradient(to bottom, rgba(0,0,0,0.25), transparent);
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-  gap: 12px;
-}
-
-.machine__brand {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.machine__brand-name {
+.marquee__brand {
   font-family: var(--font-mono);
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.3em;
-  color: var(--steel-bright);
-  text-transform: uppercase;
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: 0.34em;
+  text-indent: 0.34em;
+  color: var(--cab-red-2);
+  text-shadow:
+    0 1px 0 rgba(255,255,255,0.7),
+    0 0 18px rgba(200, 40, 50, 0.35);
 }
 
-.machine__brand-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--steel-edge);
-  box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
-}
-
-/* LED Display */
-.machine__display {
-  flex: 1;
-  background: #080f1a;
-  border: 1px solid rgba(0, 229, 176, 0.2);
-  border-radius: 8px;
-  padding: 8px 14px;
-  box-shadow: var(--shadow-inset), 0 0 20px var(--led-glow);
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  max-width: 280px;
-}
-
-.display__label {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  letter-spacing: 0.15em;
-  color: var(--led-dim);
-  flex-shrink: 0;
-  text-transform: uppercase;
-}
-
-.display__value {
-  font-family: var(--font-mono);
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--led);
-  letter-spacing: 0.05em;
-  text-shadow: 0 0 10px var(--led), 0 0 20px var(--led-glow);
-  flex: 1;
-  text-align: right;
-  transition: color 0.2s;
-}
-
-.display__message {
+.marquee__tag {
   font-family: var(--font-mono);
   font-size: 10px;
-  color: var(--led-amber);
-  letter-spacing: 0.06em;
-  max-width: 120px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  text-align: right;
-  min-height: 14px;
-}
-
-.display__value--error {
-  color: var(--accent) !important;
-  text-shadow: 0 0 10px var(--accent), 0 0 20px var(--accent-glow) !important;
-  animation: flash-error 0.4s ease-out;
-}
-
-.display__value--success {
-  animation: flash-success 0.4s ease-out;
+  font-weight: 700;
+  letter-spacing: 0.5em;
+  text-indent: 0.5em;
+  color: #a8622a;
 }
 
 /* =========================================================
-   Machine body: glass + coin panel side by side
+   Body layout
    ========================================================= */
 .machine__body {
   display: flex;
-  gap: 0;
-  padding: 16px 18px;
+  gap: 16px;
   align-items: stretch;
 }
 
 /* =========================================================
-   Glass panel
+   Glass window
    ========================================================= */
-.machine__glass {
+.window {
   flex: 1;
-  position: relative;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-panel);
-  overflow: hidden;
-  box-shadow: var(--shadow-glass);
+  min-width: 0;
+  border-radius: 10px;
+  background: #0d0a10;
+  padding: 8px;
+  box-shadow:
+    inset 0 3px 10px rgba(0,0,0,0.9),
+    inset 0 -1px 0 rgba(255,255,255,0.06);
 }
 
-/* Shine overlay on glass */
-.glass__reflection {
+.window__glass {
+  position: relative;
+  height: 100%;
+  border-radius: 6px;
+  background:
+    linear-gradient(180deg, var(--interior-1) 0%, var(--interior-2) 100%);
+  border: 1px solid rgba(160, 200, 255, 0.14);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 14px 12px 0;
+  gap: 10px;
+}
+
+/* Interior side walls + ceiling light */
+.window__glass::before {
+  content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    135deg,
-    var(--glass-shine) 0%,
-    transparent 40%,
-    transparent 60%,
-    rgba(255,255,255,0.02) 100%
-  );
+  background:
+    linear-gradient(180deg, rgba(255, 236, 190, 0.10) 0%, transparent 16%),
+    linear-gradient(90deg, rgba(0,0,0,0.5) 0%, transparent 7%, transparent 93%, rgba(0,0,0,0.5) 100%);
   pointer-events: none;
-  z-index: 5;
-  border-radius: inherit;
+  z-index: 1;
 }
 
-.glass__inner {
-  padding: 12px 12px 6px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+/* Glass glare — sits above everything inside the window */
+.window__glare {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+  background:
+    linear-gradient(115deg,
+      transparent 0%, transparent 28%,
+      rgba(180, 215, 255, 0.075) 33%, rgba(180, 215, 255, 0.02) 44%,
+      transparent 50%, transparent 74%,
+      rgba(180, 215, 255, 0.05) 79%, transparent 86%),
+    var(--glass-tint);
 }
 
-/* =========================================================
-   Shelves
-   ========================================================= */
-.shelf {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.shelf__units {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-end;
-  gap: 5px;
-  min-height: 62px;
-  padding: 4px 6px 0;
-}
-
-.shelf__floor {
-  height: 3px;
-  background: linear-gradient(to right, transparent, var(--steel-edge), var(--steel-edge), transparent);
-  border-radius: 2px;
-  margin: 0 4px;
-  opacity: 0.7;
-}
-
-/* =========================================================
-   Product units (CSS shapes for each product)
-   ========================================================= */
-.product-unit {
-  position: relative;
-  width: 28px;
+/* Drop zone below the slots */
+.window__drop {
+  height: 96px;
   flex-shrink: 0;
-  border-radius: var(--radius-unit) var(--radius-unit) 4px 4px;
-  box-shadow: inset -3px 0 6px rgba(0,0,0,0.3), 0 2px 4px rgba(0,0,0,0.4);
-  cursor: default;
-  transform-origin: bottom center;
-  transition: opacity 0.2s;
-}
-
-.product-unit--WATER {
-  height: 56px;
-  background: linear-gradient(
-    170deg,
-    #5ed0f0 0%,
-    var(--product-water) 40%,
-    #1a7ca0 80%,
-    #0e4f66 100%
-  );
-  border-top: 2px solid #a0e8ff;
-}
-
-.product-unit--WATER::before {
-  content: '';
-  position: absolute;
-  top: 6px;
-  left: 4px;
-  width: 6px;
-  height: 18px;
-  border-radius: 3px;
-  background: rgba(255,255,255,0.25);
-  transform: skewX(-8deg);
-}
-
-.product-unit--JUICE {
-  height: 52px;
-  background: linear-gradient(
-    170deg,
-    #ffd080 0%,
-    var(--product-juice) 40%,
-    #b05a10 80%,
-    #6e3208 100%
-  );
-  border-top: 2px solid #ffe0a0;
-  border-radius: 4px 4px 8px 8px;
-}
-
-.product-unit--JUICE::before {
-  content: '';
-  position: absolute;
-  top: 5px;
-  left: 5px;
-  width: 5px;
-  height: 14px;
-  border-radius: 3px;
-  background: rgba(255,255,255,0.2);
-  transform: skewX(-5deg);
-}
-
-.product-unit--SODA {
-  height: 58px;
-  background: linear-gradient(
-    170deg,
-    #ff80a8 0%,
-    var(--product-soda) 40%,
-    #8a1545 80%,
-    #550c2a 100%
-  );
-  border-top: 2px solid #ffb0cc;
-  border-radius: 5px 5px 3px 3px;
-}
-
-.product-unit--SODA::before {
-  content: '';
-  position: absolute;
-  top: 8px;
-  left: 4px;
-  width: 5px;
-  height: 20px;
-  border-radius: 3px;
-  background: rgba(255,255,255,0.18);
-  transform: skewX(-6deg);
-}
-
-/* Ghost unit for empty slots */
-.product-unit--ghost {
-  opacity: 0.12;
-  background: var(--steel-edge) !important;
-  border-top-color: var(--steel-bright) !important;
-}
-.product-unit--ghost::before {
-  display: none;
-}
-
-/* Falling product animation */
-.product-unit--falling {
-  animation: product-fall 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-  z-index: 100;
+  margin: 0 -12px;
+  background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.55) 70%);
   position: relative;
+  z-index: 0;
 }
 
 /* =========================================================
-   Product selector buttons
+   Product slots
    ========================================================= */
-.glass__selectors {
-  display: flex;
-  gap: 8px;
-  padding: 10px 8px;
-  background: rgba(0,0,0,0.2);
-  border-top: 1px solid rgba(255,255,255,0.04);
-}
-
-.selector-btn {
+.slot {
+  position: relative;
+  z-index: 2;
   flex: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  padding: 10px 6px;
-  background: var(--steel-mid);
-  border: 1px solid var(--steel-edge);
-  border-radius: var(--radius-button);
-  color: var(--led);
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.1s;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
-  font-family: var(--font-mono);
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
+  justify-content: flex-end;
+  min-height: 0;
 }
 
-.selector-btn:hover:not(:disabled) {
-  background: var(--steel-light);
-  border-color: var(--led-dim);
-  box-shadow: 0 2px 12px rgba(0, 229, 176, 0.15), inset 0 1px 0 rgba(255,255,255,0.07);
-}
-
-.selector-btn:active:not(:disabled) {
-  transform: scale(0.96);
-  box-shadow: none;
-}
-
-.selector-btn:disabled,
-.selector-btn[data-stock="0"] {
-  opacity: 0.38;
-  cursor: not-allowed;
-  border-color: var(--steel);
-}
-
-.selector-btn__key {
-  font-size: 9px;
-  letter-spacing: 0.12em;
-  color: var(--led-amber);
-  opacity: 0.8;
-}
-
-.selector-btn__name {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  color: var(--led);
-}
-
-.selector-btn__price {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--led-amber);
-  text-shadow: 0 0 8px rgba(245, 166, 35, 0.4);
-}
-
-/* =========================================================
-   Coin panel
-   ========================================================= */
-.machine__coin-panel {
-  width: 130px;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 10px;
-  margin-left: 14px;
-}
-
-.coin-panel__slot-area {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-}
-
-.coin-slot {
-  width: 80px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
-
-.coin-slot__label {
-  font-family: var(--font-mono);
-  font-size: 7px;
-  letter-spacing: 0.12em;
-  color: var(--led-dim);
-  text-transform: uppercase;
-}
-
-.coin-slot__opening {
-  width: 60px;
-  height: 20px;
-  background: #080f1a;
-  border-radius: 10px;
-  border: 1.5px solid var(--steel-edge);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: inset 0 2px 6px rgba(0,0,0,0.8), 0 1px 0 rgba(255,255,255,0.04);
+.slot__lane {
   position: relative;
-  overflow: hidden;
-}
-
-.coin-slot__slit {
-  width: 32px;
-  height: 3px;
-  background: #020710;
-  border-radius: 2px;
-  box-shadow: inset 0 1px 2px rgba(0,0,0,0.9);
-}
-
-/* Coin buttons */
-.coin-panel__buttons {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  width: 100%;
-}
-
-.coin-btn {
-  aspect-ratio: 1;
-  border-radius: 50%;
-  border: 2px solid;
-  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.2), transparent 60%),
-              radial-gradient(circle at center, var(--coin-gold), #8a6010);
-  border-color: #b8880f;
-  cursor: pointer;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.12s, box-shadow 0.12s;
-  box-shadow: 0 3px 8px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,255,0.2);
-  font-family: var(--font-mono);
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
+  align-items: flex-end;
+  padding: 0 10px 6px 14px;
+  min-height: 96px;
 }
 
-/* Silver style for small coins */
-.coin-btn[data-coin="5"],
-.coin-btn[data-coin="10"],
-.coin-btn[data-coin="25"] {
-  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.3), transparent 60%),
-              radial-gradient(circle at center, #d0d8e0, #7a8898);
-  border-color: #8a9ab0;
-  box-shadow: 0 3px 8px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,255,0.3);
+.slot__products {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  position: relative;
+  z-index: 2;
 }
 
-.coin-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,255,0.25);
-}
-
-.coin-btn:active:not(:disabled) {
-  transform: translateY(1px) scale(0.93);
-  box-shadow: 0 1px 4px rgba(0,0,0,0.5);
-}
-
-.coin-btn__value {
-  font-size: 10px;
-  font-weight: 700;
-  color: rgba(0,0,0,0.75);
-  text-shadow: 0 1px 0 rgba(255,255,255,0.3);
-  letter-spacing: 0.02em;
+/* --- Spiral coil (rings are injected by JS) --- */
+.slot__coil {
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  bottom: 8px;
+  height: 44px;
+  z-index: 3;
   pointer-events: none;
 }
 
-.coin-panel__divider {
-  width: 80%;
-  height: 1px;
-  background: linear-gradient(to right, transparent, var(--steel-edge), transparent);
-}
-
-/* Return button */
-.return-btn {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 10px 6px;
-  background: var(--steel-mid);
-  border: 1px solid var(--steel-edge);
-  border-radius: var(--radius-button);
-  color: var(--led-amber);
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, transform 0.1s;
-  font-family: var(--font-mono);
-  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-}
-
-.return-btn:hover:not(:disabled) {
-  background: var(--steel-light);
-  border-color: var(--led-amber-dim);
-}
-
-.return-btn:active:not(:disabled) {
-  transform: scale(0.95);
-}
-
-.return-btn__icon {
-  font-size: 16px;
-  line-height: 1;
-}
-
-.return-btn__label {
-  font-size: 8px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-align: center;
-  line-height: 1.3;
-}
-
-/* Change bank */
-.change-bank {
-  width: 100%;
-  background: rgba(0,0,0,0.2);
-  border: 1px solid var(--steel-edge);
-  border-radius: 6px;
-  padding: 6px 8px;
-}
-
-.change-bank__label {
-  font-family: var(--font-mono);
-  font-size: 7px;
-  letter-spacing: 0.15em;
-  color: var(--led-dim);
-  text-transform: uppercase;
-  margin-bottom: 5px;
-}
-
-.change-bank__coins {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.change-bank__row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.change-bank__denom {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  color: var(--steel-bright);
-}
-
-.change-bank__count {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  font-weight: 700;
-  color: var(--led-amber);
-  text-shadow: 0 0 6px rgba(245,166,35,0.3);
-  min-width: 18px;
-  text-align: right;
-}
-
-.change-bank__count--low {
-  color: var(--accent);
-  text-shadow: 0 0 6px rgba(255, 77, 109, 0.4);
-}
-
-/* =========================================================
-   Dispensing tray
-   ========================================================= */
-.machine__tray {
-  margin: 0 18px 6px;
-  background: var(--tray-bg);
-  border: 2px solid var(--tray-border);
-  border-radius: 0 0 10px 10px;
-  border-top: none;
-  min-height: 64px;
-  position: relative;
-  box-shadow: inset 0 4px 12px rgba(0,0,0,0.6);
-  overflow: hidden;
-}
-
-.tray__opening {
-  height: 6px;
-  background: linear-gradient(to bottom, #020810, transparent);
-  border-bottom: 1px solid rgba(255,255,255,0.03);
-}
-
-.tray__contents {
-  padding: 8px 14px;
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  min-height: 52px;
-}
-
-.tray__empty {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--steel-edge);
-  letter-spacing: 0.1em;
-  opacity: 0.5;
-}
-
-/* Dispensed product in tray */
-.tray-product {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  animation: tray-item-appear 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-}
-
-.tray-product--WATER {
-  background: rgba(41, 166, 212, 0.2);
-  border: 1px solid rgba(41, 166, 212, 0.4);
-  color: #5ed0f0;
-}
-
-.tray-product--JUICE {
-  background: rgba(240, 140, 42, 0.2);
-  border: 1px solid rgba(240, 140, 42, 0.4);
-  color: #ffd080;
-}
-
-.tray-product--SODA {
-  background: rgba(212, 41, 112, 0.2);
-  border: 1px solid rgba(212, 41, 112, 0.4);
-  color: #ff80a8;
-}
-
-/* Change coins in tray */
-.tray-coin {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
+.coil-ring {
+  position: absolute;
+  bottom: 0;
+  width: 38px;
+  height: 44px;
+  border: 3px solid transparent;
   border-radius: 50%;
-  font-family: var(--font-mono);
-  font-size: 8px;
-  font-weight: 700;
-  opacity: 0;
-  animation: coin-appear 0.25s ease-out forwards;
+  border-left-color: rgba(214, 222, 232, 0.95);
+  border-top-color: rgba(150, 160, 175, 0.55);
+  border-bottom-color: rgba(90, 100, 115, 0.5);
+  transform: rotate(-14deg);
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.6));
 }
 
-.tray-coin--silver {
-  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.3), transparent 60%),
-              radial-gradient(circle at center, #c8d4e0, #6a7888);
-  border: 1.5px solid #8a9ab0;
-  color: rgba(0,0,0,0.6);
+/* Coil advances one "step" during vend */
+.slot--vending .coil-ring {
+  animation: coil-step 0.9s cubic-bezier(0.35, 0, 0.35, 1) both;
 }
 
-.tray-coin--gold {
-  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.2), transparent 60%),
-              radial-gradient(circle at center, var(--coin-gold), #7a5010);
-  border: 1.5px solid #a87010;
-  color: rgba(0,0,0,0.65);
+/* --- Shelf edge --- */
+.slot__shelf {
+  height: 5px;
+  margin: 0 4px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #4d4550 0%, #262028 70%, #100d13 100%);
+  box-shadow: 0 2px 3px rgba(0,0,0,0.7);
+  flex-shrink: 0;
 }
 
-/* =========================================================
-   Machine footer (technician key)
-   ========================================================= */
-.machine__footer {
-  display: flex;
-  justify-content: center;
-  padding: 4px 0 2px;
-}
-
-.tech-key {
+/* --- Price tag strip --- */
+.slot__tag {
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 5px 12px;
-  background: transparent;
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 20px;
-  cursor: pointer;
-  opacity: 0.35;
-  transition: opacity 0.2s, border-color 0.2s;
-  color: var(--steel-bright);
+  gap: 8px;
+  margin: 4px 4px 6px;
+  padding: 3px 10px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #2e2833 0%, #1c1721 100%);
+  border: 1px solid rgba(255,255,255,0.07);
   font-family: var(--font-mono);
+  flex-shrink: 0;
 }
 
-.tech-key:hover {
-  opacity: 0.8;
-  border-color: var(--steel-bright);
-}
-
-.tech-key__icon {
+.slot__code {
   font-size: 11px;
-  transition: transform 0.3s;
-}
-
-.tech-key:hover .tech-key__icon {
-  transform: rotate(60deg);
-}
-
-.tech-key__label {
-  font-size: 8px;
-  letter-spacing: 0.18em;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-/* =========================================================
-   Technician slide-in panel
-   ========================================================= */
-.tech-panel {
-  position: fixed;
-  top: 0;
-  right: 0;
-  height: 100%;
-  width: 300px;
-  background: linear-gradient(175deg, #1a2540, #0e1628);
-  border-left: 1px solid var(--steel-edge);
-  box-shadow: -20px 0 60px rgba(0,0,0,0.7);
-  transform: translateX(100%);
-  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 200;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--steel-edge) transparent;
-}
-
-.tech-panel[aria-hidden="false"] {
-  transform: translateX(0);
-}
-
-.tech-panel__inner {
-  padding: 32px 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  min-height: 100%;
-}
-
-.tech-panel__title {
-  font-family: var(--font-mono);
-  font-size: 14px;
-  letter-spacing: 0.2em;
-  color: var(--led);
-  text-transform: uppercase;
-  text-shadow: 0 0 12px var(--led-glow);
-  border-bottom: 1px solid var(--steel-edge);
-  padding-bottom: 12px;
-}
-
-.tech-panel__section-title {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  letter-spacing: 0.18em;
+  font-weight: 800;
   color: var(--led-amber);
-  text-transform: uppercase;
-  margin-bottom: 10px;
-}
-
-.tech-panel__grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.tech-label {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  cursor: default;
-}
-
-.tech-label span {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--steel-bright);
   letter-spacing: 0.08em;
 }
 
-.tech-input {
-  width: 100%;
-  padding: 8px 10px;
-  background: #080f1a;
-  border: 1px solid var(--steel-edge);
-  border-radius: 6px;
-  color: var(--led);
-  font-family: var(--font-mono);
-  font-size: 14px;
-  font-weight: 600;
-  text-align: center;
-  outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
-  -moz-appearance: textfield;
-}
-
-.tech-input::-webkit-outer-spin-button,
-.tech-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-}
-
-.tech-input:focus {
-  border-color: var(--led-dim);
-  box-shadow: 0 0 0 2px var(--led-glow);
-}
-
-.tech-panel__apply {
-  width: 100%;
-  padding: 14px;
-  background: linear-gradient(135deg, rgba(0,229,176,0.15), rgba(0,229,176,0.08));
-  border: 1px solid var(--led-dim);
-  border-radius: var(--radius-button);
-  color: var(--led);
-  font-family: var(--font-mono);
-  font-size: 12px;
+.slot__name {
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.28em;
+  color: #cfc6d6;
+  flex: 1;
+}
+
+.slot__price {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--led-green);
+  text-shadow: 0 0 8px var(--led-green-dim);
+}
+
+.slot__soldout {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: var(--led-red);
+  border: 1px solid rgba(255, 93, 93, 0.5);
+  border-radius: 3px;
+  padding: 1px 6px;
+  animation: soldout-blink 1.6s steps(2, start) infinite;
+}
+
+/* =========================================================
+   Product shapes (pure CSS)
+   ========================================================= */
+.product {
+  position: relative;
+  flex-shrink: 0;
+  transform-origin: bottom center;
+}
+
+.product--ghost { opacity: 0.10; filter: grayscale(1); }
+
+/* ---- WATER: bottle with cap and label ---- */
+.product--WATER {
+  width: 32px;
+  height: 78px;
+  border-radius: 9px 9px 5px 5px;
+  background:
+    linear-gradient(90deg, var(--water-3) 0%, var(--water-2) 30%, var(--water-1) 48%, var(--water-2) 72%, var(--water-3) 100%);
+  box-shadow: inset -2px 0 4px rgba(0,0,0,0.35), 0 3px 5px rgba(0,0,0,0.55);
+}
+.product--WATER::before {           /* cap + neck */
+  content: '';
+  position: absolute;
+  top: -11px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 14px;
+  height: 11px;
+  border-radius: 3px 3px 0 0;
+  background: linear-gradient(90deg, #0e5d82 0%, #3fb1e0 55%, #0e5d82 100%);
+}
+.product--WATER::after {            /* label band */
+  content: '';
+  position: absolute;
+  top: 33px;
+  left: 0;
+  right: 0;
+  height: 22px;
+  background:
+    linear-gradient(90deg, rgba(0,0,0,0.22) 0%, transparent 30%, transparent 70%, rgba(0,0,0,0.22) 100%),
+    linear-gradient(180deg, #f2fbff 0%, #d3eefc 100%);
+  border-top: 1px solid rgba(255,255,255,0.75);
+  border-bottom: 1px solid rgba(0,0,0,0.25);
+}
+
+/* ---- JUICE: carton with slanted top ---- */
+.product--JUICE {
+  width: 36px;
+  height: 66px;
+  border-radius: 3px 3px 4px 4px;
+  background:
+    linear-gradient(90deg, var(--juice-3) 0%, var(--juice-2) 30%, var(--juice-1) 50%, var(--juice-2) 74%, var(--juice-3) 100%);
+  box-shadow: inset -2px 0 4px rgba(0,0,0,0.3), 0 3px 5px rgba(0,0,0,0.55);
+}
+.product--JUICE::before {           /* gable top */
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 0;
+  right: 0;
+  height: 11px;
+  background: linear-gradient(90deg, #b55b09 0%, #ffc768 50%, #b55b09 100%);
+  clip-path: polygon(0 100%, 14% 20%, 50% 0, 86% 20%, 100% 100%);
+}
+.product--JUICE::after {            /* fruit dot label */
+  content: '';
+  position: absolute;
+  top: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 36% 32%, #fff3c8 0%, #ffa02e 55%, #d96a00 100%);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.35);
+}
+
+/* ---- SODA: aluminium can with pull tab ---- */
+.product--SODA {
+  width: 34px;
+  height: 58px;
+  border-radius: 6px 6px 6px 6px / 4px 4px 4px 4px;
+  background:
+    linear-gradient(90deg, var(--soda-3) 0%, var(--soda-2) 28%, var(--soda-1) 48%, var(--soda-2) 74%, var(--soda-3) 100%);
+  box-shadow: inset -2px 0 4px rgba(0,0,0,0.35), 0 3px 5px rgba(0,0,0,0.55);
+}
+.product--SODA::before {            /* aluminium lid */
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: 1px;
+  right: 1px;
+  height: 6px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, #6f7680 0%, #d9dee5 50%, #6f7680 100%);
+  border-top: 1px solid #eef1f5;
+}
+.product--SODA::after {             /* wave label */
+  content: '';
+  position: absolute;
+  top: 20px;
+  left: 0;
+  right: 0;
+  height: 18px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.55) 100%);
+  clip-path: polygon(0 35%, 25% 15%, 50% 40%, 75% 12%, 100% 32%, 100% 70%, 75% 88%, 50% 62%, 25% 90%, 0 68%);
+  opacity: 0.85;
+}
+
+/* The front product being vended (animated with WAAPI from JS) */
+.product--vending {
+  z-index: 20;
+}
+
+/* =========================================================
+   Control panel
+   ========================================================= */
+.panel {
+  width: 168px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 12px 12px 14px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #2b2129 0%, #191218 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.09),
+    inset 0 -2px 6px rgba(0,0,0,0.6),
+    0 4px 10px rgba(0,0,0,0.35);
+}
+
+/* --- LED display --- */
+.led {
+  border-radius: 7px;
+  background: var(--led-bg);
+  border: 2px solid #06210b;
+  box-shadow:
+    inset 0 2px 10px rgba(0,0,0,0.85),
+    0 0 16px rgba(83, 251, 124, 0.10);
+  padding: 8px 10px;
+  font-family: var(--font-mono);
+}
+
+/* Scanline overlay */
+.led {
+  position: relative;
+  overflow: hidden;
+}
+.led::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(0deg,
+    transparent 0 2px, rgba(0, 0, 0, 0.22) 2px 3px);
+  pointer-events: none;
+}
+
+.led__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.led__label {
+  font-size: 8px;
+  letter-spacing: 0.22em;
+  color: var(--led-green-dim);
+}
+
+.led__credit {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--led-green);
+  text-shadow: 0 0 9px var(--led-green-dim), 0 0 22px rgba(83,251,124,0.25);
+  font-variant-numeric: tabular-nums;
+}
+
+.led__credit--error {
+  color: var(--led-red);
+  text-shadow: 0 0 9px rgba(255,93,93,0.5);
+}
+
+.led__divider {
+  height: 1px;
+  margin: 6px 0 5px;
+  background: rgba(83, 251, 124, 0.14);
+}
+
+.led__row--msg {
+  min-height: 15px;
+  overflow: hidden;
+}
+
+.led__message {
+  display: inline-block; /* transform (scroll ticker) needs a box */
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--led-amber);
+  text-shadow: 0 0 8px rgba(255, 190, 61, 0.4);
+  white-space: nowrap;
+}
+
+.led__message--scroll {
+  animation: led-scroll 6s linear infinite;
+}
+
+.led__message--error {
+  color: var(--led-red);
+  text-shadow: 0 0 8px rgba(255, 93, 93, 0.45);
+  animation: led-blink 0.9s steps(2, start) 3;
+}
+
+/* --- Exact change lamp --- */
+.lamp {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 2px;
+}
+
+.lamp__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #3a2126;
+  border: 1px solid rgba(0,0,0,0.6);
+  box-shadow: inset 0 1px 1px rgba(0,0,0,0.7);
+  transition: background 0.25s, box-shadow 0.25s;
+}
+
+.lamp[data-on="true"] .lamp__dot {
+  background: var(--led-red);
+  box-shadow: 0 0 8px rgba(255, 93, 93, 0.8);
+  animation: lamp-blink 1.4s steps(2, start) infinite;
+}
+
+.lamp__text {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: #7d6f7b;
+}
+
+.lamp[data-on="true"] .lamp__text { color: #d9909a; }
+
+/* --- Keypad --- */
+.keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.keypad__btn {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  border: 1px solid #45353f;
+  background: linear-gradient(180deg, #3d3039 0%, #241b22 100%);
+  box-shadow:
+    0 3px 0 #120c11,
+    inset 0 1px 0 rgba(255,255,255,0.12);
   cursor: pointer;
-  transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
-  box-shadow: 0 0 20px var(--led-glow);
-  text-transform: uppercase;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+  transition: transform 0.08s, box-shadow 0.08s, filter 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
-.tech-panel__apply:hover:not(:disabled) {
-  background: linear-gradient(135deg, rgba(0,229,176,0.25), rgba(0,229,176,0.15));
-  box-shadow: 0 0 30px var(--led-glow), inset 0 0 10px var(--led-glow);
+.keypad__btn:hover:not(:disabled) { filter: brightness(1.25); }
+
+.keypad__btn:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: 0 0 0 #120c11, inset 0 1px 0 rgba(255,255,255,0.08);
 }
 
-.tech-panel__apply:active:not(:disabled) {
-  transform: scale(0.97);
-}
-
-.tech-panel__apply:disabled {
-  opacity: 0.4;
+.keypad__btn:disabled {
+  opacity: 0.45;
   cursor: not-allowed;
 }
 
-.tech-panel__close {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  width: 28px;
-  height: 28px;
-  background: transparent;
-  border: 1px solid var(--steel-edge);
+.keypad__code {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #e8dfe8;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+}
+
+.keypad__led {
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
-  color: var(--steel-bright);
-  font-size: 12px;
+  background: #171017;
+  box-shadow: inset 0 1px 1px rgba(0,0,0,0.8);
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.keypad__btn:not(:disabled) .keypad__led {
+  background: var(--led-green);
+  box-shadow: 0 0 6px var(--led-green-dim);
+}
+
+/* Affordable products pulse gently */
+.keypad__btn--ready:not(:disabled) .keypad__led {
+  animation: key-ready 1.4s ease-in-out infinite;
+}
+
+/* =========================================================
+   Coin slot + return lever
+   ========================================================= */
+.coin-entry {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.coin-entry__plate {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  padding: 12px 8px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, var(--steel-1) 0%, var(--steel-2) 60%, var(--steel-3) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.85),
+    inset 0 -2px 4px rgba(0,0,0,0.35),
+    0 3px 6px rgba(0,0,0,0.45);
+}
+
+.coin-entry__slot {
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #7f8895 0%, #59616d 100%);
+  box-shadow: inset 0 2px 5px rgba(0,0,0,0.55), inset 0 -1px 0 rgba(255,255,255,0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.coin-entry__slit {
+  display: block;
+  width: 6px;
+  height: 26px;
+  border-radius: 3px;
+  background: #05060a;
+  box-shadow:
+    inset 0 0 4px #000,
+    0 0 0 2px rgba(0,0,0,0.28),
+    0 1px 0 rgba(255,255,255,0.3);
+}
+
+/* Slit flashes when a coin goes in */
+.coin-entry__slot--feed .coin-entry__slit {
+  animation: slit-feed 0.3s ease-out;
+}
+
+.coin-entry__return {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: radial-gradient(circle at 34% 30%, #f4f7fa 0%, var(--steel-2) 55%, var(--steel-3) 100%);
+  box-shadow:
+    inset 0 -2px 4px rgba(0,0,0,0.4),
+    inset 0 2px 3px rgba(255,255,255,0.7),
+    0 3px 6px rgba(0,0,0,0.5);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: border-color 0.15s, color 0.15s;
-  line-height: 1;
+  transition: transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
-.tech-panel__close:hover {
-  border-color: var(--accent);
-  color: var(--accent);
+.coin-entry__lever {
+  display: block;
+  width: 8px;
+  height: 26px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #3c434d 0%, #767f8c 50%, #3c434d 100%);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.6);
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.coin-entry__return:hover .coin-entry__lever { transform: rotate(12deg); }
+.coin-entry__return:active { transform: scale(0.94); }
+.coin-entry__return--turn .coin-entry__lever {
+  animation: lever-turn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.coin-entry__label {
+  font-family: var(--font-mono);
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: #8b7d89;
 }
 
 /* =========================================================
-   Coin animation layer
+   Service lock
    ========================================================= */
-.coin-animation-layer {
+.service-lock {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 7px;
+  border: 1px solid rgba(255,255,255,0.07);
+  background: transparent;
+  cursor: pointer;
+  opacity: 0.55;
+  transition: opacity 0.2s, border-color 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.service-lock:hover { opacity: 1; border-color: rgba(255,255,255,0.2); }
+
+.service-lock__keyhole {
+  position: relative;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #cfd6de 0%, #7c8694 60%, #4d565f 100%);
+  box-shadow: inset 0 -1px 2px rgba(0,0,0,0.5);
+}
+
+.service-lock__keyhole::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 3px;
+  height: 7px;
+  border-radius: 2px 2px 1px 1px;
+  background: #14100f;
+}
+
+.service-lock__label {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  color: #a394a1;
+}
+
+/* =========================================================
+   Bottom: delivery bin + coin cup
+   ========================================================= */
+.machine__bottom {
+  display: flex;
+  align-items: stretch;
+  gap: 16px;
+  padding: 16px 0 20px;
+}
+
+/* --- Delivery bin --- */
+.bin {
+  position: relative;
+  flex: 1;
+  height: 116px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #16101a 0%, #0b070d 100%);
+  box-shadow:
+    inset 0 4px 14px rgba(0,0,0,0.9),
+    inset 0 -1px 0 rgba(255,255,255,0.05);
+  overflow: hidden;
+}
+
+.bin__cavity {
+  position: absolute;
+  inset: 12px 14px 10px;
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 0 6px 2px;
+  z-index: 1;
+}
+
+/* Push flap covers the bin; swings open on hover / when an item lands */
+.bin__flap {
+  position: absolute;
+  inset: 6px 8px;
+  z-index: 2;
+  border: none;
+  border-radius: 7px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.10) 0%, transparent 30%),
+    linear-gradient(90deg, var(--cab-red-3) 0%, var(--cab-red-2) 20%, var(--cab-red-2) 80%, var(--cab-red-3) 100%);
+  box-shadow:
+    inset 0 2px 0 rgba(255,255,255,0.14),
+    inset 0 -3px 8px rgba(0,0,0,0.4),
+    0 2px 6px rgba(0,0,0,0.5);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-origin: top center;
+  transition: transform 0.45s cubic-bezier(0.34, 1.4, 0.64, 1);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.bin__flap-text {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.5em;
+  text-indent: 0.5em;
+  color: rgba(255, 235, 235, 0.8);
+  text-shadow: 0 -1px 0 rgba(0,0,0,0.5);
+}
+
+.bin__flap:hover,
+.bin--open .bin__flap {
+  transform: perspective(600px) rotateX(-58deg);
+}
+
+/* Item pill that lands in the bin */
+.bin-item {
+  position: relative;
+  transform-origin: bottom center;
+  animation: bin-land 0.55s cubic-bezier(0.34, 1.45, 0.64, 1) both;
+  filter: drop-shadow(0 4px 5px rgba(0,0,0,0.65));
+}
+
+/* Nudge / wobble when clicking the flap with items inside */
+.bin--nudge .bin-item {
+  animation: bin-nudge 0.4s ease-in-out;
+}
+
+/* --- Coin return cup --- */
+.cup {
+  width: 168px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #241b22 0%, #120d13 100%);
+  box-shadow:
+    inset 0 3px 10px rgba(0,0,0,0.85),
+    inset 0 -1px 0 rgba(255,255,255,0.05);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 8px 6px;
+  gap: 4px;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.cup__label {
+  font-family: var(--font-mono);
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: #857487;
+}
+
+.cup__cavity {
+  width: 100%;
+  flex: 1;
+  border-radius: 6px;
+  background:
+    radial-gradient(ellipse 80% 100% at 50% 100%, #060409 0%, #17111a 90%);
+  box-shadow: inset 0 3px 8px rgba(0,0,0,0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 3px;
+  padding: 4px;
+  overflow: hidden;
+}
+
+.cup--flash .cup__cavity {
+  animation: cup-flash 0.5s ease-out;
+}
+
+/* Coin lying in the cup */
+.cup-coin {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 800;
+  animation: cup-coin-drop 0.45s cubic-bezier(0.34, 1.5, 0.64, 1) both;
+}
+
+.cup-coin--silver {
+  background:
+    radial-gradient(circle at 35% 30%, var(--coin-silver-1) 0%, var(--coin-silver-2) 55%, var(--coin-silver-3) 100%);
+  border: 2px solid var(--coin-silver-3);
+  color: #2c343e;
+}
+
+.cup-coin--gold {
+  background:
+    radial-gradient(circle at 35% 30%, var(--coin-gold-1) 0%, var(--coin-gold-2) 55%, var(--coin-gold-3) 100%);
+  border: 2px solid var(--coin-gold-3);
+  color: #4a3406;
+}
+
+/* =========================================================
+   Base / feet
+   ========================================================= */
+.machine__base {
+  position: absolute;
+  left: 26px;
+  right: 26px;
+  bottom: -14px;
+  height: 14px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.machine__foot {
+  width: 46px;
+  height: 100%;
+  border-radius: 0 0 5px 5px;
+  background: linear-gradient(180deg, #241419 0%, #0d0709 100%);
+  box-shadow: 0 6px 10px rgba(0,0,0,0.7);
+}
+
+/* =========================================================
+   Coin pocket dock
+   ========================================================= */
+.pocket {
+  position: relative;
+  z-index: 50;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: max(14px, env(safe-area-inset-bottom));
+  padding: 10px 22px;
+  border-radius: 40px;
+  background: rgba(20, 15, 26, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 14px 34px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+.pocket__title {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.26em;
+  color: #7f7288;
+}
+
+.pocket__coins {
+  display: flex;
+  gap: 12px;
+}
+
+/* --- Pocket coin buttons --- */
+.pcoin {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  transition: transform 0.14s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.14s;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.pcoin--silver {
+  border: 3px solid var(--coin-silver-3);
+  background:
+    radial-gradient(circle at 34% 28%, var(--coin-silver-1) 0%, var(--coin-silver-2) 58%, var(--coin-silver-3) 100%);
+  box-shadow:
+    0 4px 10px rgba(0,0,0,0.55),
+    inset 0 2px 2px rgba(255,255,255,0.75),
+    inset 0 -3px 4px rgba(0,0,0,0.28);
+}
+
+.pcoin--gold {
+  border: 3px solid var(--coin-gold-3);
+  background:
+    radial-gradient(circle at 34% 28%, var(--coin-gold-1) 0%, var(--coin-gold-2) 58%, var(--coin-gold-3) 100%);
+  box-shadow:
+    0 4px 10px rgba(0,0,0,0.55),
+    inset 0 2px 2px rgba(255, 240, 190, 0.8),
+    inset 0 -3px 4px rgba(0,0,0,0.3);
+}
+
+/* Milled edge */
+.pcoin::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  background: repeating-conic-gradient(
+    rgba(0,0,0,0.28) 0deg 3deg, transparent 3deg 8deg);
+  -webkit-mask: radial-gradient(circle, transparent 62%, #000 64%);
+          mask: radial-gradient(circle, transparent 62%, #000 64%);
+  pointer-events: none;
+}
+
+.pcoin:hover { transform: translateY(-5px) rotate(-4deg); }
+.pcoin:active { transform: translateY(0) scale(0.92); }
+
+.pcoin__face {
+  font-size: 13px;
+  font-weight: 800;
+  color: rgba(20, 20, 28, 0.72);
+  text-shadow: 0 1px 0 rgba(255,255,255,0.45);
+  pointer-events: none;
+}
+
+.pocket__mute {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: transparent;
+  color: #9d8fa6;
+  font-size: 14px;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pocket__mute:hover { color: #e8dff0; border-color: rgba(255,255,255,0.3); }
+.pocket__mute[data-muted="true"] { color: #574d5e; text-decoration: line-through; }
+
+/* =========================================================
+   Flying coin (pocket → slot), spawned in fx-layer
+   ========================================================= */
+.fx-layer {
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 300;
 }
 
-/* Animated coin that flies into the slot */
-.flying-coin {
+.fly-coin {
   position: absolute;
-  width: 20px;
-  height: 20px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: var(--font-mono);
-  font-size: 7px;
-  font-weight: 700;
-  pointer-events: none;
-  animation: coin-fly 0.35s cubic-bezier(0.4, 0, 0.8, 0.6) forwards;
+  font-size: 9px;
+  font-weight: 800;
+  will-change: transform;
 }
 
-.flying-coin--silver {
-  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.3), transparent),
-              radial-gradient(circle at center, #c8d4e0, #6a7888);
-  border: 1.5px solid #8a9ab0;
-  color: rgba(0,0,0,0.65);
+.fly-coin--silver {
+  background: radial-gradient(circle at 34% 28%, var(--coin-silver-1) 0%, var(--coin-silver-2) 58%, var(--coin-silver-3) 100%);
+  border: 2px solid var(--coin-silver-3);
+  color: #2c343e;
 }
 
-.flying-coin--gold {
-  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.2), transparent),
-              radial-gradient(circle at center, var(--coin-gold), #7a5010);
-  border: 1.5px solid #a87010;
-  color: rgba(0,0,0,0.65);
+.fly-coin--gold {
+  background: radial-gradient(circle at 34% 28%, var(--coin-gold-1) 0%, var(--coin-gold-2) 58%, var(--coin-gold-3) 100%);
+  border: 2px solid var(--coin-gold-3);
+  color: #4a3406;
 }
 
 /* =========================================================
-   Keyframe animations
+   Service drawer
    ========================================================= */
+.tech-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: 320px;
+  background: linear-gradient(175deg, #221a2b 0%, #120d18 100%);
+  border-left: 1px solid rgba(255,255,255,0.1);
+  box-shadow: -24px 0 70px rgba(0,0,0,0.75);
+  transform: translateX(100%);
+  transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+  z-index: 400;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
 
-/* Machine shake on error */
+.tech-panel[aria-hidden="false"] { transform: translateX(0); }
+
+.tech-panel__inner {
+  padding: 34px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+  min-height: 100%;
+}
+
+.tech-panel__title {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  letter-spacing: 0.22em;
+  color: var(--led-green);
+  text-transform: uppercase;
+  text-shadow: 0 0 12px var(--led-green-dim);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  padding-bottom: 14px;
+}
+
+.tech-panel__section-title {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--led-amber);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.tech-panel__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.tech-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tech-label span {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: #a394ad;
+  letter-spacing: 0.1em;
+}
+
+.tech-input {
+  width: 100%;
+  padding: 9px 10px;
+  background: #0b0810;
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 7px;
+  color: var(--led-green);
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 700;
+  text-align: center;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.tech-input::-webkit-outer-spin-button,
+.tech-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+.tech-input:focus {
+  border-color: var(--led-green-dim);
+  box-shadow: 0 0 0 3px rgba(83, 251, 124, 0.12);
+}
+
+.tech-panel__apply {
+  padding: 15px;
+  background: linear-gradient(135deg, rgba(83,251,124,0.18), rgba(83,251,124,0.08));
+  border: 1px solid var(--led-green-dim);
+  border-radius: 9px;
+  color: var(--led-green);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.24em;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+  box-shadow: 0 0 22px rgba(83, 251, 124, 0.12);
+}
+
+.tech-panel__apply:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(83,251,124,0.3), rgba(83,251,124,0.14));
+}
+
+.tech-panel__apply:active:not(:disabled) { transform: scale(0.97); }
+.tech-panel__apply:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.tech-panel__close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 30px;
+  height: 30px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.16);
+  border-radius: 50%;
+  color: #a394ad;
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.tech-panel__close:hover { border-color: var(--led-red); color: var(--led-red); }
+
+/* =========================================================
+   Busy state
+   ========================================================= */
+.machine--busy .keypad__btn,
+.machine--busy .coin-entry__return { pointer-events: none; }
+body.body--busy .pcoin { pointer-events: none; opacity: 0.6; }
+
+/* =========================================================
+   Keyframes
+   ========================================================= */
 @keyframes machine-shake {
-  0%   { transform: translateX(0); }
-  15%  { transform: translateX(-8px); }
-  30%  { transform: translateX(7px); }
-  45%  { transform: translateX(-6px); }
-  60%  { transform: translateX(5px); }
+  0%   { transform: translateX(0) rotate(0); }
+  15%  { transform: translateX(-9px) rotate(-0.3deg); }
+  30%  { transform: translateX(8px) rotate(0.3deg); }
+  45%  { transform: translateX(-6px) rotate(-0.2deg); }
+  60%  { transform: translateX(5px) rotate(0.15deg); }
   75%  { transform: translateX(-3px); }
   90%  { transform: translateX(2px); }
   100% { transform: translateX(0); }
 }
 
-/* Green flash on service */
 @keyframes service-flash {
-  0%   { box-shadow: var(--shadow-machine); }
-  30%  { box-shadow: var(--shadow-machine), 0 0 40px rgba(0,229,176,0.5); }
-  100% { box-shadow: var(--shadow-machine); }
+  0%   { filter: none; }
+  30%  { filter: brightness(1.25) saturate(1.2) drop-shadow(0 0 30px rgba(83,251,124,0.45)); }
+  100% { filter: none; }
 }
 
-/* Display error flash */
-@keyframes flash-error {
+@keyframes marquee-hum {
+  0%, 100% { box-shadow: inset 0 0 26px rgba(255,170,60,0.55), inset 0 -6px 14px rgba(200,90,20,0.35), 0 0 34px rgba(255,190,90,0.28); }
+  50%       { box-shadow: inset 0 0 30px rgba(255,170,60,0.65), inset 0 -6px 14px rgba(200,90,20,0.35), 0 0 44px rgba(255,190,90,0.38); }
+}
+
+@keyframes marquee-sweep {
+  0%, 68%   { transform: translateX(-120%); }
+  86%, 100% { transform: translateX(240%); }
+}
+
+@keyframes soldout-blink {
   0%, 100% { opacity: 1; }
-  25%       { opacity: 0.3; }
-  50%       { opacity: 1; }
-  75%       { opacity: 0.5; }
+  50%       { opacity: 0.35; }
 }
 
-/* Display success pulse */
-@keyframes flash-success {
-  0%   { transform: scale(1); }
-  40%  { transform: scale(1.05); }
-  100% { transform: scale(1); }
+@keyframes coil-step {
+  0%   { transform: translateX(0) rotate(-14deg); }
+  100% { transform: translateX(-48px) rotate(-374deg); }
 }
 
-/* Product falls from shelf to tray */
-@keyframes product-fall {
-  0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
-  30%  { transform: translateY(20px) rotate(-5deg); opacity: 1; }
-  60%  { transform: translateY(60px) rotate(10deg); opacity: 1; }
-  85%  { transform: translateY(100px) rotate(15deg); opacity: 0.7; }
-  100% { transform: translateY(140px) rotate(18deg); opacity: 0; }
+@keyframes led-scroll {
+  0%   { transform: translateX(105%); }
+  100% { transform: translateX(-105%); }
 }
 
-/* Tray item appears with a bounce */
-@keyframes tray-item-appear {
-  0%   { opacity: 0; transform: translateY(-12px) scale(0.85); }
-  60%  { opacity: 1; transform: translateY(2px) scale(1.04); }
-  100% { opacity: 1; transform: translateY(0) scale(1); }
+@keyframes led-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.15; }
 }
 
-/* Tray pulses when item lands */
-@keyframes tray-pulse {
-  0%   { box-shadow: inset 0 4px 12px rgba(0,0,0,0.6); }
-  40%  { box-shadow: inset 0 4px 12px rgba(0,0,0,0.6), 0 0 20px rgba(0,229,176,0.2); }
-  100% { box-shadow: inset 0 4px 12px rgba(0,0,0,0.6); }
+@keyframes lamp-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
 }
 
-.machine__tray--pulse {
-  animation: tray-pulse 0.4s ease-out;
+@keyframes key-ready {
+  0%, 100% { box-shadow: 0 0 5px var(--led-green-dim); }
+  50%       { box-shadow: 0 0 12px var(--led-green), 0 0 20px var(--led-green-dim); }
 }
 
-/* Change coin appears in tray */
-@keyframes coin-appear {
-  0%   { opacity: 0; transform: scale(0.5) translateY(-8px); }
-  70%  { opacity: 1; transform: scale(1.1) translateY(0); }
-  100% { opacity: 1; transform: scale(1) translateY(0); }
+@keyframes slit-feed {
+  0%   { box-shadow: inset 0 0 4px #000, 0 0 0 2px rgba(0,0,0,0.28); }
+  40%  { box-shadow: inset 0 0 4px #000, 0 0 14px rgba(255, 220, 130, 0.9); }
+  100% { box-shadow: inset 0 0 4px #000, 0 0 0 2px rgba(0,0,0,0.28); }
 }
 
-/* Flying coin from button to slot */
-@keyframes coin-fly {
-  0%   { opacity: 1; transform: scale(1); }
-  70%  { opacity: 0.8; transform: scale(0.7); }
-  100% { opacity: 0; transform: scale(0.3); }
+@keyframes lever-turn {
+  0%   { transform: rotate(0); }
+  45%  { transform: rotate(88deg); }
+  100% { transform: rotate(0); }
+}
+
+@keyframes bin-land {
+  0%   { transform: translateY(-90px) rotate(-14deg) scale(0.9); opacity: 0; }
+  55%  { transform: translateY(4px) rotate(5deg) scale(1.02); opacity: 1; }
+  75%  { transform: translateY(-6px) rotate(-2deg); }
+  100% { transform: translateY(0) rotate(0) scale(1); opacity: 1; }
+}
+
+@keyframes bin-nudge {
+  0%, 100% { transform: rotate(0); }
+  30%       { transform: rotate(-7deg) translateY(-3px); }
+  65%       { transform: rotate(5deg); }
+}
+
+@keyframes cup-coin-drop {
+  0%   { transform: translateY(-46px) scale(0.7); opacity: 0; }
+  60%  { transform: translateY(3px) scale(1.06); opacity: 1; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+@keyframes cup-flash {
+  0%   { box-shadow: inset 0 3px 8px rgba(0,0,0,0.9); }
+  40%  { box-shadow: inset 0 3px 8px rgba(0,0,0,0.9), 0 0 18px rgba(255, 217, 119, 0.4); }
+  100% { box-shadow: inset 0 3px 8px rgba(0,0,0,0.9); }
 }
 
 /* =========================================================
-   Disabled / in-flight state
+   Reduced motion
    ========================================================= */
-.machine--busy .coin-btn,
-.machine--busy .selector-btn,
-.machine--busy .return-btn {
-  pointer-events: none;
-  opacity: 0.5;
-}
-
-/* =========================================================
-   Scrollbar styling
-   ========================================================= */
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--steel-edge); border-radius: 2px; }
-
-/* =========================================================
-   Responsive — tablet
-   ========================================================= */
-@media (max-width: 768px) {
-  body {
-    padding: 16px;
-  }
-
-  .machine {
-    width: 100%;
-    max-width: 560px;
-    box-shadow:
-      0 24px 64px rgba(0, 0, 0, 0.7),
-      0 8px 24px rgba(0, 0, 0, 0.5),
-      inset 0 1px 0 rgba(255, 255, 255, 0.07),
-      inset 0 -1px 0 rgba(0, 0, 0, 0.5);
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001s !important;
   }
 }
 
 /* =========================================================
-   Responsive — mobile
+   Narrow screens: the stage scaling handles the machine;
+   only the pocket dock needs to adapt.
    ========================================================= */
-@media (max-width: 640px) {
-  body {
-    align-items: flex-start;
-    padding:
-      max(12px, env(safe-area-inset-top))
-      max(12px, env(safe-area-inset-right))
-      max(12px, env(safe-area-inset-bottom))
-      max(12px, env(safe-area-inset-left));
-    min-height: 100dvh;
-  }
-
-  .scene {
-    width: 100%;
-    max-width: 100%;
-  }
-
-  .machine {
-    width: 100%;
-    max-width: none;
-    border-radius: 12px;
-    outline-width: 3px;
-    padding-bottom: 12px;
-  }
-
-  .machine::before,
-  .machine::after {
-    width: 8px;
-  }
-
-  /* Header: stack brand above display */
-  .machine__header {
-    flex-direction: column;
-    align-items: stretch;
+@media (max-width: 560px) {
+  .pocket {
     gap: 10px;
-    padding: 12px 14px 10px;
-  }
-
-  .machine__brand {
-    justify-content: center;
-  }
-
-  .machine__display {
-    max-width: none;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 12px;
-    gap: 6px 10px;
-  }
-
-  .display__value {
-    font-size: 20px;
-  }
-
-  .display__message {
-    flex-basis: 100%;
-    max-width: none;
-    text-align: center;
-    white-space: normal;
-    overflow: visible;
-    text-overflow: unset;
-    font-size: 9px;
-    min-height: auto;
-  }
-
-  /* Body: glass on top, coin controls below */
-  .machine__body {
-    flex-direction: column;
-    padding: 12px 14px;
-    gap: 0;
-  }
-
-  .machine__glass {
-    border-radius: 8px;
-  }
-
-  .glass__inner {
-    padding: 10px 10px 4px;
-    gap: 5px;
-  }
-
-  .shelf__units {
-    min-height: 50px;
-    gap: 4px;
-    padding: 2px 4px 0;
-    overflow-x: auto;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .shelf__units::-webkit-scrollbar {
-    display: none;
-  }
-
-  .product-unit {
-    width: 24px;
-  }
-
-  .product-unit--WATER { height: 48px; }
-  .product-unit--JUICE { height: 44px; }
-  .product-unit--SODA  { height: 50px; }
-
-  .glass__selectors {
-    gap: 6px;
-    padding: 8px 6px;
-  }
-
-  .selector-btn {
-    min-height: 52px;
-    padding: 8px 4px;
-  }
-
-  .selector-btn__name {
-    font-size: 9px;
-    letter-spacing: 0.12em;
-  }
-
-  /* Coin panel: full-width row below products */
-  .machine__coin-panel {
-    width: 100%;
-    margin-left: 0;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-    padding: 14px 0 0;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
-    margin-top: 12px;
-  }
-
-  .coin-panel__slot-area {
-    display: none;
-  }
-
-  .coin-panel__buttons {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-    width: min(100%, 240px);
-    margin: 0 auto;
-    justify-items: center;
-  }
-
-  .coin-btn {
-    width: 100%;
-    max-width: 80px;
-    aspect-ratio: 1;
-    height: auto;
-    min-height: 0;
-  }
-
-  .coin-btn__value {
-    font-size: 11px;
-  }
-
-  .coin-panel__divider {
-    width: 100%;
-  }
-
-  .return-btn {
-    flex-direction: row;
-    justify-content: center;
-    gap: 10px;
-    min-height: 48px;
-    padding: 12px 16px;
-  }
-
-  .return-btn__label {
-    font-size: 9px;
-    text-align: left;
-  }
-
-  .return-btn__label br {
-    display: none;
-  }
-
-  .change-bank {
-    width: 100%;
-  }
-
-  /* Tray */
-  .machine__tray {
-    margin: 0 14px 4px;
-    min-height: 56px;
-    border-radius: 0 0 8px 8px;
-  }
-
-  .tray__contents {
-    padding: 8px 10px;
-    min-height: 44px;
-    gap: 6px;
-    justify-content: center;
-  }
-
-  .tray-product {
-    font-size: 10px;
-    padding: 5px 10px;
-  }
-
-  .tray-coin {
-    width: 26px;
-    height: 26px;
-    font-size: 7px;
-  }
-
-  /* Footer */
-  .machine__footer {
-    padding: 6px 0 4px;
-  }
-
-  .tech-key {
-    min-height: 44px;
-    padding: 8px 16px;
-    opacity: 0.5;
-  }
-
-  /* Technician panel: full-width drawer */
-  .tech-panel {
-    width: 100%;
-    max-width: 100%;
-    border-left: none;
-    border-top: 1px solid var(--steel-edge);
-    top: auto;
-    bottom: 0;
-    height: auto;
-    max-height: 92dvh;
-    transform: translateY(100%);
-    box-shadow: 0 -16px 48px rgba(0, 0, 0, 0.7);
-    border-radius: 16px 16px 0 0;
-  }
-
-  .tech-panel[aria-hidden="false"] {
-    transform: translateY(0);
-  }
-
-  .tech-panel__inner {
-    padding:
-      24px
-      max(20px, env(safe-area-inset-right))
-      max(24px, env(safe-area-inset-bottom))
-      max(20px, env(safe-area-inset-left));
-  }
-
-  .tech-panel__apply {
-    min-height: 48px;
-  }
-
-  .tech-input {
-    min-height: 44px;
-    font-size: 16px; /* prevents iOS zoom on focus */
-  }
-
-  /* Shorter product-fall on stacked layout */
-  @keyframes product-fall {
-    0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
-    30%  { transform: translateY(16px) rotate(-5deg); opacity: 1; }
-    60%  { transform: translateY(48px) rotate(10deg); opacity: 1; }
-    85%  { transform: translateY(80px) rotate(15deg); opacity: 0.7; }
-    100% { transform: translateY(110px) rotate(18deg); opacity: 0; }
-  }
-}
-
-/* =========================================================
-   Responsive — small phones
-   ========================================================= */
-@media (max-width: 380px) {
-  body {
-    padding:
-      max(8px, env(safe-area-inset-top))
-      max(8px, env(safe-area-inset-right))
-      max(8px, env(safe-area-inset-bottom))
-      max(8px, env(safe-area-inset-left));
-  }
-
-  .machine__header {
-    padding: 10px 12px 8px;
-  }
-
-  .machine__body {
-    padding: 10px 12px;
-  }
-
-  .machine__brand-name {
-    font-size: 11px;
-    letter-spacing: 0.2em;
-  }
-
-  .display__value {
-    font-size: 18px;
-  }
-
-  .product-unit {
-    width: 20px;
-  }
-
-  .product-unit--WATER { height: 42px; }
-  .product-unit--JUICE { height: 38px; }
-  .product-unit--SODA  { height: 44px; }
-
-  .shelf__units {
-    min-height: 44px;
-    gap: 3px;
-  }
-
-  .selector-btn {
-    min-height: 48px;
-    padding: 6px 2px;
-  }
-
-  .selector-btn__key {
-    font-size: 8px;
-  }
-
-  .selector-btn__price {
-    font-size: 10px;
-  }
-
-  .coin-btn {
-    max-width: 72px;
-  }
-
-  .coin-btn__value {
-    font-size: 10px;
-  }
-
-  .machine__tray {
-    margin: 0 12px 4px;
-  }
-
-  .tech-panel__grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* =========================================================
-   Responsive — landscape phones
-   ========================================================= */
-@media (max-width: 896px) and (orientation: landscape) and (max-height: 500px) {
-  body {
-    align-items: center;
-    padding: 8px 16px;
-  }
-
-  .machine__header {
-    flex-direction: row;
     padding: 8px 14px;
   }
 
-  .machine__brand {
-    justify-content: flex-start;
-  }
+  .pocket__title { display: none; }
 
-  .machine__display {
-    flex-wrap: nowrap;
-  }
-
-  .display__message {
-    flex-basis: auto;
-    max-width: 100px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    text-align: right;
-  }
-
-  .machine__body {
-    flex-direction: row;
-    padding: 10px 14px;
-    gap: 12px;
-  }
-
-  .machine__coin-panel {
-    width: 130px;
-    margin-left: 0;
-    margin-top: 0;
-    padding: 0;
-    border-top: none;
-    flex-shrink: 0;
-  }
-
-  .coin-panel__buttons {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .coin-btn {
-    min-height: 0;
-  }
-
-  .return-btn {
-    flex-direction: column;
-    min-height: 0;
-    padding: 8px 6px;
-  }
-
-  .return-btn__label br {
-    display: inline;
-  }
-
-  .tech-panel {
-    top: 0;
-    bottom: auto;
-    height: 100%;
-    max-height: none;
-    border-radius: 0;
-    transform: translateX(100%);
-    border-top: none;
-    border-left: 1px solid var(--steel-edge);
-  }
-
-  .tech-panel[aria-hidden="false"] {
-    transform: translateX(0);
-  }
+  .pcoin { width: 46px; height: 46px; }
 }
