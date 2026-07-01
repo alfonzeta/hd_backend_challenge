@@ -1,4 +1,4 @@
-.PHONY: install test stan cs cs-fix check serve
+.PHONY: install test stan cs cs-fix check serve docker-up docker-down
 
 install:
 	composer install
@@ -19,3 +19,9 @@ check: cs stan test
 
 serve:
 	php -S localhost:8080 -t public public/index.php
+
+docker-up:
+	docker compose up --build
+
+docker-down:
+	docker compose down
