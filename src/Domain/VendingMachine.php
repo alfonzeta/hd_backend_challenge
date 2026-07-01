@@ -140,6 +140,12 @@ final class VendingMachine
         return $this->insertedBalance;
     }
 
+    /** @return list<Coin> */
+    public function insertedCoins(): array
+    {
+        return $this->insertedCoins;
+    }
+
     public function changeBank(): CoinInventory
     {
         return $this->changeBank;
